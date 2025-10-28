@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+/* Theme Variables */
+:root {
+  --primary-bg: #0e2148;
+  --secondary-bg: #483aa0;
+  --accent-color: #e3d095;
+  --text-primary: #ffffff;
+  --text-secondary: #e5e7eb;
+  --border-color: rgba(227, 209, 149, 0.2);
+}
+
+/* Light Theme */
+.light {
+  --primary-bg: #ffffff;
+  --secondary-bg: #f8fafc;
+  --accent-color: #0e2148;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --border-color: rgba(15, 33, 72, 0.1);
+}
+
+/* Dark Theme */
+.dark {
+  --primary-bg: #0e2148;
+  --secondary-bg: #483aa0;
+  --accent-color: #e3d095;
+  --text-primary: #ffffff;
+  --text-secondary: #e5e7eb;
+  --border-color: rgba(227, 209, 149, 0.2);
+}
+
+/* Global Theme Transitions */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/* Theme-aware background classes */
+.bg-theme-primary {
+  background-color: var(--primary-bg);
+}
+
+.bg-theme-secondary {
+  background-color: var(--secondary-bg);
+}
+
+.text-theme-primary {
+  color: var(--text-primary);
+}
+
+.text-theme-secondary {
+  color: var(--text-secondary);
+}
+
+.border-theme {
+  border-color: var(--border-color);
+}
