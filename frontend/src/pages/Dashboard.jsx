@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import {
   FaPhone,
   FaMapMarkerAlt,
@@ -18,6 +19,7 @@ import AuctionDetailModal from "../components/AuctionDetailModal";
 
 const Dashboard = () => {
   const { user, updateUser } = useAuth();
+  const { isDarkMode } = useTheme();
   const [financialData, setFinancialData] = useState({
     totalBids: 0,
     totalWon: 0,
@@ -308,20 +310,32 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div
+        className={`min-h-screen flex items-center justify-center transition-all duration-300 ${
+          isDarkMode
+            ? "bg-gradient-to-br from-[#0E2148] to-[#483AA0]"
+            : "bg-[#604bfb]"
+        }`}
+      >
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div
+      className={`min-h-screen transition-all duration-300 ${
+        isDarkMode
+          ? "bg-gradient-to-br from-[#0E2148] to-[#483AA0]"
+          : "bg-[#604bfb]"
+      }`}
+    >
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">داشبورد</h1>
-            <p className="mt-2 text-gray-600">
+            <h1 className="text-3xl font-bold text-gray-200">داشبورد</h1>
+            <p className="mt-2 text-gray-200">
               خوش آمدید {user?.username || "کاربر"}! خلاصه‌ای از فعالیت‌های شما
             </p>
           </div>

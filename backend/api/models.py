@@ -26,7 +26,7 @@ class User(AbstractUser):
     subscription_active = models.BooleanField( null=True, blank=True)
     
     # Admin field
-    is_admin = models.BooleanField( verbose_name="ادمین")
+    is_admin = models.BooleanField(default=False, verbose_name="ادمین")
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

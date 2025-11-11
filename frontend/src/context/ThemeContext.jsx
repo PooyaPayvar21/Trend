@@ -11,15 +11,26 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark mode
-
-  // Load theme from localStorage on mount
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
-      setIsDarkMode(savedTheme === "dark");
+  // Initialize theme from localStorage synchronously to avoid initial flash
+  const getInitialTheme = () => {
+    try {
+      const savedTheme = localStorage.getItem("theme");
+      const isDark = savedTheme ? savedTheme === "dark" : true; // default to dark
+      const root = document.documentElement;
+      if (isDark) {
+        root.classList.add("dark");
+        root.classList.remove("light");
+      } else {
+        root.classList.add("light");
+        root.classList.remove("dark");
+      }
+      return isDark;
+    } catch {
+      return true;
     }
-  }, []);
+  };
+
+  const [isDarkMode, setIsDarkMode] = useState(getInitialTheme);
 
   // Save theme to localStorage when it changes
   useEffect(() => {
@@ -49,4 +60,4 @@ export const ThemeProvider = ({ children }) => {
       {children}
     </ThemeContext.Provider>
   );
-}; 
+};

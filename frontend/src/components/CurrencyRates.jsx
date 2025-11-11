@@ -76,9 +76,11 @@ const CurrencyRates = () => {
   };
 
   return (
-    <section className={`rounded-2xl shadow-soft p-4 md:p-6 mb-6 md:mb-8 transition-all duration-300 ${
-      isDarkMode ? "bg-[#0E2148]" : "bg-[#604bfb]"
-    }`}>
+    <section
+      className={`rounded-2xl shadow-soft p-4 md:p-6 mb-6 md:mb-8 transition-all duration-300 ${
+        isDarkMode ? "bg-[#0E2148]" : "bg-[#604bfb]"
+      }`}
+    >
       <h2 className="text-xl md:text-2xl font-bold text-white mb-6 md:mb-8 text-center">
         نرخ ارز
       </h2>

@@ -23,11 +23,10 @@ const Login = () => {
       const loginData = await login(formData.email, formData.password);
       toast.success("ورود موفقیت‌آمیز");
       if (loginData.user?.is_admin) {
-        navigate('/admin')
+        navigate("/admin");
       } else {
-        navigate('/dashboard')
+        navigate("/dashboard");
       }
-
     } catch (error) {
       toast.error(error.detail || "خطا در ورود. لطفا دوباره تلاش کنید.");
     } finally {
@@ -44,15 +43,18 @@ const Login = () => {
   };
 
   return (
-    <div className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 transition-all duration-300 ${isDarkMode ? "bg-[#0E2148]" : "bg-[#604bfb]"
-      }`}>
+    <div
+      className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 transition-all duration-300 rounded-2xl ${
+        isDarkMode ? "bg-[#0E2148]" : "bg-[#604bfb]"
+      }`}
+    >
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-lg">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             ورود به حساب کاربری
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            یا{" "}
+            یا
             <Link
               to="/register"
               className="font-medium text-gray-900 hover:text-gray-900/70"
@@ -131,8 +133,9 @@ const Login = () => {
           <div>
             <button
               type="submit"
-              className={`group cursor-pointer relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-black bg-[#E3D095] hover:bg-[#E3D095]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200 ${isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+              className={`group cursor-pointer relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-black bg-[#E3D095] hover:bg-[#E3D095]/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200 ${
+                isLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
               disabled={isLoading}
             >
               {isLoading ? "در حال ورود..." : "ورود"}

@@ -1,464 +1,481 @@
-import React, { useState } from "react";
-import { NavLink, Link } from "react-router-dom";
-import {
-  FaUser,
-  FaShoppingCart,
-  FaSignOutAlt,
-  FaHome,
-  FaGavel,
-  FaFileAlt,
-  FaSearch,
-  FaGlobe,
-  FaTags,
-  FaIndustry,
-  FaGlobeAmericas,
-  FaChartBar,
-  FaNewspaper,
-  FaPhone,
-  FaHandshake,
-  FaCog,
-} from "react-icons/fa";
-import MobileNavSlider from "./MobileNavSlider";
-import { FaPhoneVolume } from "react-icons/fa6";
-import { IoPersonCircleSharp } from "react-icons/io5";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import {
+  FaBars,
+  FaTimes,
+  FaSearch,
+  FaShoppingCart,
+  FaUser,
+  FaSignInAlt,
+  FaSignOutAlt,
+  FaUserCircle,
+  FaTachometerAlt,
+  FaBell,
+  FaHome,
+  FaHammer,
+  FaPlusCircle,
+  FaUserShield,
+} from "react-icons/fa";
 import ThemeToggle from "./ThemeToggle";
-import toast from "react-hot-toast";
-import { BiSupport } from "react-icons/bi";
 
-const navItems = [
-  { to: "/", label: "صفحه نخست", icon: FaHome },
-  { to: "/auctions", label: "مزایده", icon: FaGavel },
-  { to: "/trend", label: "مناقصه", icon: FaFileAlt },
-  { to: "/inquiry", label: "استعلام", icon: FaSearch },
-  { to: "/global", label: "تهیه اسناد منقصه", icon: FaGlobe },
-  { to: "/categories", label: "انتشار آگهی", icon: FaTags },
-  { to: "/insidemarket", label: "بازارهای داخلی", icon: FaIndustry },
-  { to: "/outsidemarket", label: "بازارهای خارجی", icon: FaGlobeAmericas },
-  { to: "/datanalysis", label: "تحلیل داده ها", icon: FaChartBar },
-  { to: "/news", label: "اخبار و قوانین", icon: FaNewspaper },
-  { to: "/contact", label: "تماس با ما", icon: FaPhone },
-  // { to: "/cooperation", label: "همکاری با ما", icon: FaHandshake },
-];
-
-const Navbar = () => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [filter, setFilter] = useState("auction");
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+const Header = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { user, logout } = useAuth();
   const { isDarkMode } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Determine the destination based on user login status
-  const getAuthDestination = () => {
-    return user ? "/dashboard" : "/login";
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/auctions?search=${encodeURIComponent(searchQuery.trim())}`);
+      setIsMenuOpen(false);
+    }
   };
 
-  // Get user initials for avatar
-  const getUserInitials = () => {
-    if (!user?.username) return "ع";
-    return user.username.charAt(0).toUpperCase();
-  };
-
-  // Handle logout
   const handleLogout = () => {
-    setShowLogoutConfirm(true);
-  };
-
-  // Confirm logout
-  const confirmLogout = () => {
     logout();
-    toast.success("خروج موفقیت‌آمیز");
-    setShowLogoutConfirm(false);
-    // navigate('/') is now handled in AuthContext
+    setIsMenuOpen(false);
+    navigate("/");
   };
 
-  // Cancel logout
-  const cancelLogout = () => {
-    setShowLogoutConfirm(false);
+  const handleNavigation = (path) => {
+    navigate(path);
+    setIsMenuOpen(false);
   };
+
+  const isActivePath = (path) => {
+    return location.pathname === path;
+  };
+
+  const navigationItems = [
+    { path: "/", label: "صفحه اصلی", icon: FaHome },
+    { path: "/auctions", label: "مزایده‌", icon: FaHammer },
+    { path: "/trend", label: "مناقصه", icon: FaHammer },
+    { path: "/create-auction", label: "ایجاد مزایده", icon: FaPlusCircle },
+  ];
+
+  const adminItems = [
+    { path: "/admin", label: "پنل مدیریت", icon: FaUserShield },
+  ];
 
   return (
     <header
-      className={`shadow-soft border-b transition-all duration-300 ${
-        isDarkMode
-          ? "bg-gradient-to-br from-[#0E2148] to-[#483AA0] border-[#E3D095]/30"
-          : "bg-gradient-to-br from-[#604bfb] to-[#7c5cfb] border-white/20"
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled
+          ? isDarkMode
+            ? "bg-slate-900/95 backdrop-blur-md shadow-2xl border-b border-slate-700/50"
+            : "bg-white/95 backdrop-blur-md shadow-2xl border-b border-gray-200/50"
+          : isDarkMode
+          ? "bg-transparent"
+          : "bg-transparent"
       }`}
-      dir="rtl"
     >
-      {/* Top Header */}
-      <div className="container mx-auto px-4">
-        {/* Mobile: Flex row, logo left, search center, icons right */}
-        <div className="flex justify-between items-center h-20 md:h-20">
-          {/* Left: Logo or Site Name */}
-          <div className="flex items-center gap-2">
-            {/* Show site name 'جدید' on mobile, hide on desktop */}
-            <Link
-              to="/"
-              className="md:hidden font-bold text-lg text-white cursor-pointer"
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
+          {/* Logo */}
+          <Link
+            to="/"
+            className={`flex items-center gap-3 text-2xl font-bold transition-all duration-300 ${
+              isDarkMode
+                ? "text-white hover:text-purple-300"
+                : "text-gray-900 hover:text-purple-600"
+            }`}
+          >
+            <div
+              className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl transition-all duration-300 ${
+                isDarkMode
+                  ? "bg-gradient-to-br from-purple-600 to-blue-600 text-white shadow-lg"
+                  : "bg-gradient-to-br from-purple-500 to-blue-500 text-white shadow-lg"
+              }`}
             >
-              جدید
-            </Link>
-          </div>
-          {/* Mobile Search Bar - between logo and icons */}
-          <div className="flex-1 md:hidden px-2">
-            <div className="flex items-center w-full">
-              <select
-                className="bg-[#1a2a5c] text-white border-none rounded-l px-2 py-2 text-sm focus:ring-2 focus:ring-[#1a2a5c]"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-              >
-                <option value="auction">مزایده</option>
-                <option value="trade">تجارت</option>
-              </select>
-              <input
-                type="text"
-                className="bg-[#1a2a5c] text-white border-none px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-[#E3D095]"
-                placeholder="کلمه کلیدی یا شماره مناقصه..."
-              />
+              ⚡
             </div>
-          </div>
-          {/* Right: Icons */}
-          <div className="flex items-center gap-3 md:hidden">
-            <div className="relative group">
-              <button
-                className="focus:outline-none cursor-pointer"
-                onClick={() => setMenuOpen(!menuOpen)}
-                aria-label="Open menu"
-              >
-                <span className="text-2xl text-[#E3D095]">&#9776;</span>
-              </button>
-              <span className="absolute bottom-[-2.2rem] right-1/2 translate-x-1/2 bg-[#23264d] text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
-                منو
-              </span>
-            </div>
-            <div className="relative group">
-              <Link
-                to={getAuthDestination()}
-                className="text-[#E3D095] hover:text-[#e3d095]/90 transition-colors duration-200"
-              >
-                {user ? (
-                  <div className="w-6 h-6 rounded-full bg-[#E3D095] text-[#0E2148] flex items-center justify-center text-sm font-bold">
-                    {getUserInitials()}
-                  </div>
-                ) : (
-                  <FaUser size={18} />
-                )}
-              </Link>
-              <span className="absolute bottom-[-2.2rem] right-1/2 translate-x-1/2 bg-[#23264d] text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
-                {user ? "داشبورد" : "ورود / ثبت نام"}
-              </span>
-            </div>
-            {user && (
-              <div className="relative group">
-                <button
-                  onClick={handleLogout}
-                  className="text-red-400 hover:text-red-300 transition-colors duration-200"
-                >
-                  <FaSignOutAlt size={18} />
-                </button>
-                <span className="absolute bottom-[-2.2rem] right-1/2 translate-x-1/2 bg-[#23264d] text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
-                  خروج
-                </span>
-              </div>
-            )}
-            <div className="relative group">
-              <Link
-                to="/cart"
-                className="text-[#E3D095] hover:text-[#e3d095]/90 transition-colors duration-200"
-              >
-                <FaShoppingCart size={18} />
-              </Link>
-              <span className="absolute bottom-[-2.2rem] right-1/2 translate-x-1/2 bg-[#23264d] text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
-                سبد خرید
-              </span>
-            </div>
-            <div className="relative group">
-              <ThemeToggle />
-              <span className="absolute bottom-[-2.2rem] right-1/2 translate-x-1/2 bg-[#23264d] text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
-                تغییر تم
-              </span>
-            </div>
-          </div>
+            <span className="hidden sm:block">مزایده هوشمند</span>
+          </Link>
 
-          {/* Desktop: Site Name and Search Bar */}
-          <div className="hidden md:flex items-center gap-4">
-            <div className="flex flex-col ml-2">
-              <span className="font-bold text-lg text-white">جدید</span>
-              <span className="text-xs text-[#E3D095]">ENHANCING BUSINESS</span>
-            </div>
-            <div className="flex items-center w-[900px] mx-4">
-              <div
-                className={`flex items-stretch w-full rounded-full shadow-md transition-all duration-300 border focus-within:ring-2 focus-within:ring-[#604bfb] ${
-                  isDarkMode
-                    ? "bg-[#1a2a5c] border-[#23264d]"
-                    : "bg-white border-gray-200"
-                }`}
-              >
-                <select
-                  className={`rounded-r-full px-4 py-2 text-sm border-none outline-none transition-all duration-300 ${
-                    isDarkMode
-                      ? "bg-[#1a2a5c] text-white focus:ring-[#1a2a5c]"
-                      : "bg-white text-[#1a2a5c] focus:ring-[#604bfb]"
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center gap-2 mr-2">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => handleNavigation(item.path)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                    isActivePath(item.path)
+                      ? isDarkMode
+                        ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg"
+                        : "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg"
+                      : isDarkMode
+                      ? "text-gray-300 hover:text-white hover:bg-white/10"
+                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
                   }`}
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
                 >
-                  <option value="auction">مزایده</option>
-                  <option value="trade">مناقصه</option>
-                </select>
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    className={`w-full px-4 py-2 text-sm border-none outline-none bg-transparent rounded-none rounded-l-full transition-all duration-300 placeholder-gray-400 ${
-                      isDarkMode
-                        ? "text-white placeholder-gray-400"
-                        : "text-[#1a2a5c] placeholder-gray-500"
-                    }`}
-                    placeholder="کلمه کلیدی یا شماره مناقصه..."
-                  />
-                  <span
-                    className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none transition-all duration-300 ${
-                      isDarkMode ? "text-[#E3D095]" : "text-[#604bfb]"
+                  <Icon className="text-sm" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+
+            {user?.is_admin &&
+              adminItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => handleNavigation(item.path)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                      isActivePath(item.path)
+                        ? "bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg"
+                        : isDarkMode
+                        ? "text-gray-300 hover:text-white hover:bg-white/10"
+                        : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
                     }`}
                   >
-                    <svg
-                      width="18"
-                      height="18"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M12.9 14.32a8 8 0 111.414-1.414l4.387 4.387a1 1 0 01-1.414 1.414l-4.387-4.387zM14 8a6 6 0 11-12 0 6 6 0 0112 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </span>
-                </div>
-              </div>
-              <button className="ml-3 bg-[#E3D095] cursor-pointer text-[#0E2148] px-5 py-2 rounded-full font-bold hover:bg-[#e3d095]/90 transition-colors duration-200 shadow-md">
-                جستجو
-              </button>
-            </div>
-          </div>
-          {/* Right: Contact, Login (desktop only) */}
-          <div className="hidden md:flex items-center gap-4">
-            <ThemeToggle />
-            <span className="bg-[#E3D095] hover:bg-[#e3d095]/90 text-[#0E2148] px-4 py-2 rounded-lg shadow-soft transition-colors duration-200 font-bold">
-              <Link to={"/support"}>
-                <BiSupport className="text-2xl w-full" />
-              </Link>
-            </span>
-            <Link
-              to={getAuthDestination()}
-              className="bg-[#E3D095] hover:bg-[#e3d095]/90 text-[#0E2148] px-4 py-2 rounded-lg shadow-soft transition-colors duration-200 font-bold"
-            >
-              {user ? (
-                <div
-                  className={`w-8 h-8 rounded-full text-[#E3D095] flex items-center justify-center text-sm font-bold transition-all duration-300 ${
-                    isDarkMode ? "bg-[#0E2148]" : "bg-[#604bfb]"
-                  }`}
-                >
-                  {getUserInitials()}
-                </div>
-              ) : (
-                <IoPersonCircleSharp className="text-2xl w-full" />
-              )}
-            </Link>
-            {user && user.is_staff && (
-              <Link
-                to="/admin"
-                className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg shadow-soft transition-colors duration-200 font-bold flex items-center gap-2"
-              >
-                <FaCog size={16} />
-                <span className="hidden lg:inline">ادمین</span>
-              </Link>
-            )}
-            {user && (
+                    <Icon className="text-sm" />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+          </nav>
+
+          {/* Desktop Search Bar */}
+          <div className="hidden lg:block flex-1 max-w-md mx-8">
+            <form onSubmit={handleSearch} className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="جستجوی مزایده‌ها..."
+                className={`w-full pl-12 pr-4 py-3 rounded-2xl border-2 transition-all duration-300 focus:ring-4 focus:ring-purple-500/20 ${
+                  isDarkMode
+                    ? "bg-slate-800/50 border-slate-600 text-white placeholder-gray-400 focus:border-purple-500"
+                    : "bg-white/50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500"
+                }`}
+              />
               <button
-                onClick={handleLogout}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-soft transition-colors duration-200 font-bold flex items-center gap-2"
+                type="submit"
+                className={`absolute left-4 top-1/2 transform -translate-y-1/2 p-2 rounded-lg transition-all duration-300 ${
+                  isDarkMode
+                    ? "text-gray-400 hover:text-purple-400"
+                    : "text-gray-500 hover:text-purple-600"
+                }`}
               >
-                <FaSignOutAlt size={16} />
-                <span className="hidden lg:inline">خروج</span>
+                <FaSearch className="text-lg" />
               </button>
-            )}
+            </form>
           </div>
-        </div>
-        {/* Mobile Nav Slider: under filter and icons, only on mobile */}
-        <MobileNavSlider />
-      </div>
 
-      {/* Navigation Bar - Hidden on mobile */}
-      <nav
-        className={`hidden md:block border-t transition-all duration-300 ${
-          isDarkMode
-            ? "bg-[#0E2148]/80 border-[#E3D095]/30"
-            : "bg-[#604bfb]/80 border-white/20"
-        }`}
-      >
-        <div className="container mx-auto px-4 flex flex-wrap justify-center py-3 gap-2 text-sm font-medium">
-          {navItems.map((item) => {
-            const IconComponent = item.icon;
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `group relative flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 ${
-                    isActive
-                      ? "bg-gradient-to-r from-[#E3D095] to-[#E3D095]/90 text-[#0E2148] font-bold shadow-lg shadow-[#E3D095]/25"
-                      : isDarkMode
-                      ? "text-white hover:text-[#E3D095] hover:bg-[#E3D095]/10 hover:shadow-md hover:shadow-[#E3D095]/20"
-                      : "text-white hover:text-[#E3D095] hover:bg-white/20 hover:shadow-md hover:shadow-white/20"
-                  }`
-                }
-              >
-                <IconComponent
-                  size={16}
-                  className="transition-all duration-300 group-hover:scale-110"
-                />
-                <span className="relative">
-                  {item.label}
-                  <span
-                    className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full ${
-                      isDarkMode ? "bg-[#E3D095]" : "bg-[#604bfb]"
-                    }`}
-                  ></span>
-                </span>
-              </NavLink>
-            );
-          })}
-        </div>
-      </nav>
+          {/* Desktop User Actions */}
+          <div className="hidden lg:flex items-center gap-3">
+            <ThemeToggle />
 
-      {/* Mobile Menu */}
-      <div
-        className={`fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300 ease-in-out ${
-          menuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={() => setMenuOpen(false)}
-      />
-      <div
-        className={`fixed top-0 right-0 h-full w-[280px] z-50 transform transition-all duration-300 ease-in-out md:hidden ${
-          isDarkMode ? "bg-[#0E2148]" : "bg-[#604bfb]"
-        } ${menuOpen ? "translate-x-0" : "translate-x-full"}`}
-      >
-        <div className="flex justify-between items-center p-4 border-b border-[#E3D095]/30">
-          <button
-            onClick={() => setMenuOpen(false)}
-            className="text-[#E3D095] hover:text-[#e3d095]/90 transition-colors duration-200"
-          >
-            <span className="text-2xl cursor-pointer">×</span>
-          </button>
-          <span className="text-[#E3D095] font-bold">منو</span>
-        </div>
-        <div className="flex flex-col py-2 gap-2 text-sm font-medium overflow-y-auto h-[calc(100%-60px)]">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `transition-all duration-200 px-4 py-3 transform hover:translate-x-[-4px] ${
-                  isActive
-                    ? "bg-[#E3D095] text-[#0E2148] font-bold"
-                    : "text-white hover:text-[#E3D095] hover:bg-[#E3D095]/10"
-                }`
-              }
-              onClick={() => setMenuOpen(false)}
-            >
-              {item.label}
-            </NavLink>
-          ))}
-          <Link
-            to={getAuthDestination()}
-            className="bg-[#E3D095] hover:bg-[#e3d095]/90 text-[#0E2148] px-4 py-3 rounded-lg shadow-soft transition-all duration-200 font-bold text-center mx-4 mt-2 transform hover:scale-[1.02]"
-            onClick={() => setMenuOpen(false)}
-          >
             {user ? (
-              <div className="flex items-center justify-center gap-2">
-                <div
-                  className={`w-6 h-6 rounded-full text-[#E3D095] flex items-center justify-center text-sm font-bold transition-all duration-300 ${
-                    isDarkMode ? "bg-[#0E2148]" : "bg-[#604bfb]"
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleNavigation("/notifications")}
+                  className={`p-3 rounded-xl transition-all duration-300 relative ${
+                    isDarkMode
+                      ? "text-gray-300 hover:text-white hover:bg-white/10"
+                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
                   }`}
                 >
-                  {getUserInitials()}
+                  <FaBell className="text-lg" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                </button>
+
+                <button
+                  onClick={() => handleNavigation("/dashboard")}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                    isDarkMode
+                      ? "text-gray-300 hover:text-white hover:bg-white/10"
+                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                >
+                  <FaTachometerAlt className="text-sm" />
+                  <span>داشبورد</span>
+                </button>
+
+                <div className="relative group">
+                  <button
+                    className={`flex items-center gap-2 p-2 rounded-xl transition-all duration-300 ${
+                      isDarkMode
+                        ? "text-gray-300 hover:text-white"
+                        : "text-gray-700 hover:text-gray-900"
+                    }`}
+                  >
+                    <FaUserCircle className="text-2xl" />
+                  </button>
+
+                  <div
+                    className={`absolute top-full right-0 mt-2 w-48 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 ${
+                      isDarkMode
+                        ? "bg-slate-800 border border-slate-700"
+                        : "bg-white border border-gray-200"
+                    }`}
+                  >
+                    <div className="p-4">
+                      <div
+                        className={`text-sm font-medium mb-2 ${
+                          isDarkMode ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        {user.email}
+                      </div>
+                      <button
+                        onClick={() => handleNavigation("/profile")}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-300 ${
+                          isDarkMode
+                            ? "text-gray-300 hover:text-white hover:bg-white/10"
+                            : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                        }`}
+                      >
+                        <FaUser className="text-sm" />
+                        <span>پروفایل</span>
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-300 mt-2 ${
+                          isDarkMode
+                            ? "text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                            : "text-red-600 hover:text-red-700 hover:bg-red-50"
+                        }`}
+                      >
+                        <FaSignOutAlt className="text-sm" />
+                        <span>خروج</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <span>داشبورد</span>
               </div>
             ) : (
-              <IoPersonCircleSharp />
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleNavigation("/login")}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                    isDarkMode
+                      ? "text-gray-300 hover:text-white hover:bg-white/10"
+                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                >
+                  <FaSignInAlt className="text-sm" />
+                  <span>ورود</span>
+                </button>
+                <button
+                  onClick={() => handleNavigation("/register")}
+                  className="flex items-center gap-2 px-6 py-2 rounded-xl font-medium bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                >
+                  <span>ثبت نام</span>
+                </button>
+              </div>
             )}
-          </Link>
-          {user && user.is_staff && (
-            <Link
-              to="/admin"
-              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-3 rounded-lg shadow-soft transition-all duration-200 font-bold text-center mx-4 mt-2 transform hover:scale-[1.02] flex items-center justify-center gap-2"
-              onClick={() => setMenuOpen(false)}
-            >
-              <FaCog size={16} />
-              <span>ادمین</span>
-            </Link>
-          )}
-          {user && (
-            <button
-              onClick={() => {
-                handleLogout();
-                setMenuOpen(false);
-              }}
-              className="bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-lg shadow-soft transition-all duration-200 font-bold text-center mx-4 mt-2 transform hover:scale-[1.02] flex items-center justify-center gap-2"
-            >
-              <FaSignOutAlt size={16} />
-              <span>خروج</span>
-            </button>
-          )}
-        </div>
-      </div>
+          </div>
 
-      {/* Logout Confirmation Modal */}
-      {showLogoutConfirm && (
-        <div
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-          onClick={cancelLogout}
-        >
-          <div
-            className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
-            onClick={(e) => e.stopPropagation()}
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className={`lg:hidden p-3 rounded-xl transition-all duration-300 ${
+              isDarkMode
+                ? "text-gray-300 hover:text-white hover:bg-white/10"
+                : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+            }`}
           >
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mr-3">
-                <FaSignOutAlt className="text-red-600 text-xl" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  تایید خروج
-                </h3>
-                <p className="text-sm text-gray-500">
-                  آیا مطمئن هستید که می‌خواهید خارج شوید؟
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3 justify-end">
+            {isMenuOpen ? (
+              <FaTimes className="text-xl" />
+            ) : (
+              <FaBars className="text-xl" />
+            )}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        <div
+          className={`lg:hidden transition-all duration-300 ease-in-out ${
+            isMenuOpen
+              ? "max-h-screen opacity-100 py-6"
+              : "max-h-0 opacity-0 overflow-hidden"
+          }`}
+        >
+          {/* Mobile Search */}
+          <form onSubmit={handleSearch} className="mb-6">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="جستجوی مزایده‌ها..."
+                className={`w-full pl-12 pr-4 py-3 rounded-2xl border-2 transition-all duration-300 focus:ring-4 focus:ring-purple-500/20 ${
+                  isDarkMode
+                    ? "bg-slate-800/50 border-slate-600 text-white placeholder-gray-400 focus:border-purple-500"
+                    : "bg-white/50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500"
+                }`}
+              />
               <button
-                onClick={cancelLogout}
-                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                type="submit"
+                className={`absolute left-4 top-1/2 transform -translate-y-1/2 p-2 rounded-lg transition-all duration-300 ${
+                  isDarkMode
+                    ? "text-gray-400 hover:text-purple-400"
+                    : "text-gray-500 hover:text-purple-600"
+                }`}
               >
-                انصراف
-              </button>
-              <button
-                onClick={confirmLogout}
-                className="px-4 py-2 text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors duration-200"
-              >
-                خروج
+                <FaSearch className="text-lg" />
               </button>
             </div>
+          </form>
+
+          {/* Mobile Navigation */}
+          <nav className="space-y-2 mb-6">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => handleNavigation(item.path)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
+                    isActivePath(item.path)
+                      ? isDarkMode
+                        ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
+                        : "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
+                      : isDarkMode
+                      ? "text-gray-300 hover:text-white hover:bg-white/10"
+                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                >
+                  <Icon className="text-lg" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+
+            {user?.is_admin &&
+              adminItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => handleNavigation(item.path)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
+                      isActivePath(item.path)
+                        ? "bg-gradient-to-r from-red-500 to-pink-500 text-white"
+                        : isDarkMode
+                        ? "text-gray-300 hover:text-white hover:bg-white/10"
+                        : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                    }`}
+                  >
+                    <Icon className="text-lg" />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+          </nav>
+
+          {/* Mobile User Section */}
+          <div className="border-t pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <ThemeToggle />
+              {user && (
+                <button
+                  onClick={() => handleNavigation("/notifications")}
+                  className={`p-3 rounded-xl transition-all duration-300 relative ${
+                    isDarkMode
+                      ? "text-gray-300 hover:text-white hover:bg-white/10"
+                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                >
+                  <FaBell className="text-lg" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                </button>
+              )}
+            </div>
+
+            {user ? (
+              <div className="space-y-2">
+                <div
+                  className={`p-4 rounded-xl mb-4 ${
+                    isDarkMode ? "bg-slate-800/50" : "bg-gray-100"
+                  }`}
+                >
+                  <div
+                    className={`text-sm font-medium mb-2 ${
+                      isDarkMode ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {user.email}
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleNavigation("/dashboard")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
+                    isDarkMode
+                      ? "text-gray-300 hover:text-white hover:bg-white/10"
+                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                >
+                  <FaTachometerAlt className="text-lg" />
+                  <span>داشبورد</span>
+                </button>
+                <button
+                  onClick={() => handleNavigation("/profile")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
+                    isDarkMode
+                      ? "text-gray-300 hover:text-white hover:bg-white/10"
+                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                >
+                  <FaUser className="text-lg" />
+                  <span>پروفایل</span>
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
+                    isDarkMode
+                      ? "text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                      : "text-red-600 hover:text-red-700 hover:bg-red-50"
+                  }`}
+                >
+                  <FaSignOutAlt className="text-lg" />
+                  <span>خروج</span>
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <button
+                  onClick={() => handleNavigation("/login")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
+                    isDarkMode
+                      ? "text-gray-300 hover:text-white hover:bg-white/10"
+                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                >
+                  <FaSignInAlt className="text-lg" />
+                  <span>ورود</span>
+                </button>
+                <button
+                  onClick={() => handleNavigation("/register")}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all duration-300"
+                >
+                  <span>ثبت نام</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </header>
   );
 };
 
-export default Navbar;
+export default Header;

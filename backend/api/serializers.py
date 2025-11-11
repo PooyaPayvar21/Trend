@@ -55,10 +55,16 @@ class UserLoginSerializer(serializers.Serializer):
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     confirm_password = serializers.CharField(write_only=True)
+    company = serializers.CharField(required=False, allow_blank=True)
+    national_id = serializers.CharField(required=False, allow_blank=True)
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
+    phone_number = serializers.CharField(required=False, allow_blank=True)
+    address = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'confirm_password', 'phone_number', 'address', 'company', 'national_id']
+        fields = ['username', 'email', 'password', 'confirm_password', 'first_name', 'last_name', 'phone_number', 'address', 'company', 'national_id']
 
     def validate(self, data):
         if data['password'] != data['confirm_password']:
@@ -67,4 +73,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop('confirm_password')
-        return User.objects.create_user(**validated_data)
+        # Filter out empty optional fields to avoid issues with create_user
+        user_data = {}
+        for key, value in validated_data.items():
+            if value != '':  # Only include non-empty values
+                user_data[key] = value
+        return User.objects.create_user(**user_data)
