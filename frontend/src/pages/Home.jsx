@@ -182,8 +182,8 @@ const Home = () => {
       {/* Market Data Sections */}
       <section className="py-16">
         <div className="container mx-auto px-4 space-y-16">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div
+          <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 shadow-2xl">
+            {/* <div
               className={`rounded-2xl p-8 backdrop-blur-sm border transition-all duration-300 flex justify-center items-center ${
                 isDarkMode
                   ? "bg-white/5 border-white/10"
@@ -191,7 +191,7 @@ const Home = () => {
               }`}
             >
               <CurrencyRates />
-            </div>
+            </div> */}
             <div
               className={`rounded-2xl p-8 backdrop-blur-sm border transition-all duration-300 ${
                 isDarkMode
