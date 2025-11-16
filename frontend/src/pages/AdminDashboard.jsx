@@ -47,6 +47,7 @@ const AdminDashboard = () => {
   const [bids, setBids] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [currencies, setCurrencies] = useState([]);
+  const [tenders, setTenders] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -61,6 +62,39 @@ const AdminDashboard = () => {
   });
   const [auctionPage, setAuctionPage] = useState(1);
   const [auctionPageSize, setAuctionPageSize] = useState(10);
+  // Tender sorting and pagination
+  const [tenderSort, setTenderSort] = useState({
+    key: "created_at",
+    dir: "desc",
+  });
+  const [tenderPage, setTenderPage] = useState(1);
+  const [tenderPageSize, setTenderPageSize] = useState(10);
+  // Bids sorting and pagination
+  const [bidSort, setBidSort] = useState({ key: "created_at", dir: "desc" });
+  const [bidPage, setBidPage] = useState(1);
+  const [bidPageSize, setBidPageSize] = useState(10);
+  // Currencies sorting and pagination
+  const [currencySort, setCurrencySort] = useState({ key: "code", dir: "asc" });
+  const [currencyPage, setCurrencyPage] = useState(1);
+  const [currencyPageSize, setCurrencyPageSize] = useState(10);
+  // Filters
+  const [userActiveFilter, setUserActiveFilter] = useState("all"); // all | active | inactive
+  const [userSubFilter, setUserSubFilter] = useState("all"); // all | premium | basic
+  const [auctionStatusFilter, setAuctionStatusFilter] = useState("all");
+  const [tenderStatusFilter, setTenderStatusFilter] = useState("all");
+  // Notifications filters & pagination
+  const [notificationReadFilter, setNotificationReadFilter] = useState("all"); // all | read | unread
+  const [notificationPage, setNotificationPage] = useState(1);
+  const [notificationPageSize, setNotificationPageSize] = useState(10);
+  // Per-tab loading indicators
+  const [listLoading, setListLoading] = useState({
+    users: false,
+    auctions: false,
+    tender: false,
+    bids: false,
+    notifications: false,
+    currencies: false,
+  });
   // Chart controls
   const [chartRange, setChartRange] = useState(30); // days: 7, 30, 90
   const [showMA, setShowMA] = useState(true); // moving average overlay
@@ -89,47 +123,78 @@ const AdminDashboard = () => {
   };
 
   const loadUsers = async () => {
+    setListLoading((prev) => ({ ...prev, users: true }));
     try {
       const data = await getAdminUsers({ search: searchTerm });
       setUsers(data);
     } catch (error) {
       console.error("خطا در بارگذاری کاربران:", error);
+    } finally {
+      setListLoading((prev) => ({ ...prev, users: false }));
     }
   };
 
   const loadAuctions = async () => {
+    setListLoading((prev) => ({ ...prev, auctions: true }));
     try {
       const data = await getAdminAuctions({ search: searchTerm });
       setAuctions(data);
     } catch (error) {
       console.error("خطا در بارگذاری مزایده‌ها:", error);
+    } finally {
+      setListLoading((prev) => ({ ...prev, auctions: false }));
+    }
+  };
+
+  const loadTenders = async () => {
+    setListLoading((prev) => ({ ...prev, tender: true }));
+    try {
+      // Reuse getAdminAuctions but request tenders (API should support type filter)
+      const data = await getAdminAuctions({
+        search: searchTerm,
+        type: "tender",
+      });
+      setTenders(data);
+    } catch (error) {
+      console.error("خطا در بارگذاری مناقصه‌ها:", error);
+    } finally {
+      setListLoading((prev) => ({ ...prev, tender: false }));
     }
   };
 
   const loadBids = async () => {
+    setListLoading((prev) => ({ ...prev, bids: true }));
     try {
       const data = await getAdminBids({ search: searchTerm });
       setBids(data);
     } catch (error) {
       console.error("خطا در بارگذاری پیشنهادات:", error);
+    } finally {
+      setListLoading((prev) => ({ ...prev, bids: false }));
     }
   };
 
   const loadNotifications = async () => {
+    setListLoading((prev) => ({ ...prev, notifications: true }));
     try {
       const data = await getAdminNotifications({ search: searchTerm });
       setNotifications(data);
     } catch (error) {
       console.error("خطا در بارگذاری اعلان‌ها:", error);
+    } finally {
+      setListLoading((prev) => ({ ...prev, notifications: false }));
     }
   };
 
   const loadCurrencies = async () => {
+    setListLoading((prev) => ({ ...prev, currencies: true }));
     try {
       const data = await getAdminCurrencies({ search: searchTerm });
       setCurrencies(data);
     } catch (error) {
       console.error("خطا در بارگذاری ارزها:", error);
+    } finally {
+      setListLoading((prev) => ({ ...prev, currencies: false }));
     }
   };
 
@@ -210,6 +275,9 @@ const AdminDashboard = () => {
       case "auctions":
         loadAuctions();
         break;
+      case "tender":
+        loadTenders();
+        break;
       case "bids":
         loadBids();
         break;
@@ -253,11 +321,115 @@ const AdminDashboard = () => {
       case "currencies":
         currentItems = currencies.map((currency) => currency.id);
         break;
+      case "tender":
+        currentItems = tenders.map((tender) => tender.id);
+        break;
     }
 
     setSelectedItems(
       selectedItems.length === currentItems.length ? [] : currentItems
     );
+  };
+
+  // Additional selection helpers
+  const handleSelectPage = () => {
+    let pageIds = [];
+    switch (activeTab) {
+      case "users":
+        pageIds = pagedUsers.map((u) => u.id);
+        break;
+      case "auctions":
+        pageIds = pagedAuctions.map((a) => a.id);
+        break;
+      case "tender":
+        pageIds = pagedTenders.map((t) => t.id);
+        break;
+      case "bids":
+        pageIds = pagedBids.map((b) => b.id);
+        break;
+      case "notifications":
+        pageIds = (pagedNotifications || notifications).map((n) => n.id);
+        break;
+      default:
+        pageIds = [];
+    }
+    setSelectedItems(pageIds);
+  };
+
+  const invertSelection = () => {
+    let allIds = [];
+    switch (activeTab) {
+      case "users":
+        allIds = users.map((u) => u.id);
+        break;
+      case "auctions":
+        allIds = auctions.map((a) => a.id);
+        break;
+      case "tender":
+        allIds = tenders.map((t) => t.id);
+        break;
+      case "bids":
+        allIds = bids.map((b) => b.id);
+        break;
+      case "notifications":
+        allIds = notifications.map((n) => n.id);
+        break;
+      case "currencies":
+        allIds = currencies.map((c) => c.id);
+        break;
+      default:
+        allIds = [];
+    }
+    const inverted = allIds.filter((id) => !selectedItems.includes(id));
+    setSelectedItems(inverted);
+  };
+
+  // Row-level single action helper
+  const handleSingleAction = async (action, modelType, id) => {
+    try {
+      await adminBulkAction(action, modelType, [id]);
+      switch (modelType) {
+        case "user":
+          await loadUsers();
+          break;
+        case "auction":
+          await loadAuctions();
+          break;
+        case "tender":
+          await loadTenders();
+          break;
+        case "bid":
+          await loadBids();
+          break;
+        case "notification":
+          await loadNotifications();
+          break;
+      }
+      toast.success("عملیات انجام شد");
+    } catch (e) {
+      console.error(e);
+      toast.error("خطا در انجام عملیات");
+    }
+  };
+
+  const exportCurrentView = (filename, rows) => {
+    try {
+      const blob = new Blob([JSON.stringify(rows, null, 2)], {
+        type: "application/json",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${filename}_${new Date().toISOString().split("T")[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success("صادرات نمای فعلی انجام شد");
+    } catch (error) {
+      console.error("خطا در صادرات نمای فعلی:", error);
+      toast.error("خطا در صادرات نمای فعلی");
+    }
   };
 
   // Helpers: sorting and pagination
@@ -307,7 +479,8 @@ const AdminDashboard = () => {
     for (let i = 0; i < arr.length; i++) {
       const start = Math.max(0, i - windowSize + 1);
       const slice = arr.slice(start, i + 1);
-      const avg = slice.reduce((sum, v) => sum + (Number(v) || 0), 0) / slice.length;
+      const avg =
+        slice.reduce((sum, v) => sum + (Number(v) || 0), 0) / slice.length;
       res.push(Number(avg.toFixed(2)));
     }
     return res;
@@ -329,10 +502,14 @@ const AdminDashboard = () => {
   const DeltaBadge = ({ value }) => {
     if (value == null) return null;
     const positive = value >= 0;
-    const color = positive ? "text-green-400 bg-green-400/10" : "text-red-400 bg-red-400/10";
+    const color = positive
+      ? "text-green-400 bg-green-400/10"
+      : "text-red-400 bg-red-400/10";
     const arrow = positive ? "▲" : "▼";
     return (
-      <span className={`ml-2 inline-flex items-center px-2 py-0.5 text-xs rounded ${color}`}>
+      <span
+        className={`ml-2 inline-flex items-center px-2 py-0.5 text-xs rounded ${color}`}
+      >
         {arrow} {Math.abs(value).toLocaleString("fa-IR")}%
       </span>
     );
@@ -437,7 +614,10 @@ const AdminDashboard = () => {
 
   // Trend deltas for overview badges
   const deltaUsers = computeDeltaPercent(dashboardData?.daily_stats, "users");
-  const deltaAuctions = computeDeltaPercent(dashboardData?.daily_stats, "auctions");
+  const deltaAuctions = computeDeltaPercent(
+    dashboardData?.daily_stats,
+    "auctions"
+  );
   const deltaBids = computeDeltaPercent(dashboardData?.daily_stats, "bids");
 
   const gridColor = isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)";
@@ -474,18 +654,93 @@ const AdminDashboard = () => {
 
   // Derived, sorted & paginated
   const sortedUsers = sortBy(users, userSort);
+  const filteredUsers = sortedUsers.filter((u) => {
+    const byActive =
+      userActiveFilter === "all" ||
+      (userActiveFilter === "active" && u.is_active) ||
+      (userActiveFilter === "inactive" && !u.is_active);
+    const bySub =
+      userSubFilter === "all" ||
+      (userSubFilter === "premium" &&
+        (u.subscription_type?.toLowerCase() === "premium" || u.is_premium)) ||
+      (userSubFilter === "basic" &&
+        !(u.subscription_type?.toLowerCase() === "premium" || u.is_premium));
+    return byActive && bySub;
+  });
   const usersTotalPages = Math.max(
     1,
-    Math.ceil(sortedUsers.length / userPageSize)
+    Math.ceil(filteredUsers.length / userPageSize)
   );
-  const pagedUsers = paginate(sortedUsers, userPage, userPageSize);
+  const pagedUsers = paginate(filteredUsers, userPage, userPageSize);
 
   const sortedAuctions = sortBy(auctions, auctionSort);
+  const filteredAuctions = sortedAuctions.filter((a) => {
+    return (
+      auctionStatusFilter === "all" ||
+      auctionStatusFilter === (a.status || "").toLowerCase()
+    );
+  });
   const auctionsTotalPages = Math.max(
     1,
-    Math.ceil(sortedAuctions.length / auctionPageSize)
+    Math.ceil(filteredAuctions.length / auctionPageSize)
   );
-  const pagedAuctions = paginate(sortedAuctions, auctionPage, auctionPageSize);
+  const pagedAuctions = paginate(
+    filteredAuctions,
+    auctionPage,
+    auctionPageSize
+  );
+
+  // Tenders derived, sorted & paginated
+  const sortedTenders = sortBy(tenders, tenderSort);
+  const filteredTenders = sortedTenders.filter((t) => {
+    return (
+      tenderStatusFilter === "all" ||
+      tenderStatusFilter === (t.status || "").toLowerCase()
+    );
+  });
+  const tendersTotalPages = Math.max(
+    1,
+    Math.ceil(filteredTenders.length / tenderPageSize)
+  );
+  const pagedTenders = paginate(filteredTenders, tenderPage, tenderPageSize);
+
+  // Bids derived, sorted & paginated
+  const sortedBids = sortBy(bids, bidSort);
+  const bidsTotalPages = Math.max(
+    1,
+    Math.ceil(sortedBids.length / bidPageSize)
+  );
+  const pagedBids = paginate(sortedBids, bidPage, bidPageSize);
+
+  // Currencies derived, sorted & paginated
+  const sortedCurrencies = sortBy(currencies, currencySort);
+  const currenciesTotalPages = Math.max(
+    1,
+    Math.ceil(sortedCurrencies.length / currencyPageSize)
+  );
+  const pagedCurrencies = paginate(
+    sortedCurrencies,
+    currencyPage,
+    currencyPageSize
+  );
+
+  // Notifications derived, filtered & paginated
+  const filteredNotifications = notifications.filter((n) => {
+    return (
+      notificationReadFilter === "all" ||
+      (notificationReadFilter === "read" && n.read) ||
+      (notificationReadFilter === "unread" && !n.read)
+    );
+  });
+  const notificationsTotalPages = Math.max(
+    1,
+    Math.ceil(filteredNotifications.length / notificationPageSize)
+  );
+  const pagedNotifications = paginate(
+    filteredNotifications,
+    notificationPage,
+    notificationPageSize
+  );
 
   return (
     <div className="min-h-screen bg-[#32317D] text-white rounded-2xl">
@@ -524,6 +779,7 @@ const AdminDashboard = () => {
               { id: "overview", label: "نمای کلی" },
               { id: "users", label: "کاربران" },
               { id: "auctions", label: "مزایده‌ها" },
+              { id: "tender", label: "مناقصه ها" },
               { id: "bids", label: "پیشنهادات" },
               { id: "notifications", label: "اعلان‌ها" },
               { id: "currencies", label: "ارزها" },
@@ -546,7 +802,10 @@ const AdminDashboard = () => {
         {activeTab === "overview" && dashboardData && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-[#192658] p-6 rounded-lg border border-theme-secondary/20">
+              <div
+                className="bg-[#192658] p-6 rounded-lg border border-theme-secondary/20 cursor-pointer hover:bg-[#1b2b61]"
+                onClick={() => setActiveTab("users")}
+              >
                 <h3 className="text-lg font-semibold mb-2">کاربران</h3>
                 <div className="flex items-center gap-2 text-3xl font-bold text-blue-500">
                   {formatNumber(dashboardData.users.total)}
@@ -558,7 +817,10 @@ const AdminDashboard = () => {
                 </p>
               </div>
 
-              <div className="bg-[#192658] p-6 rounded-lg border border-theme-secondary/20">
+              <div
+                className="bg-[#192658] p-6 rounded-lg border border-theme-secondary/20 cursor-pointer hover:bg-[#1b2b61]"
+                onClick={() => setActiveTab("auctions")}
+              >
                 <h3 className="text-lg font-semibold mb-2">مزایده‌ها</h3>
                 <div className="flex items-center gap-2 text-3xl font-bold text-green-500">
                   {formatNumber(dashboardData.auctions.total)}
@@ -570,7 +832,10 @@ const AdminDashboard = () => {
                 </p>
               </div>
 
-              <div className="bg-[#192658] p-6 rounded-lg border border-theme-secondary/20">
+              <div
+                className="bg-[#192658] p-6 rounded-lg border border-theme-secondary/20 cursor-pointer hover:bg-[#1b2b61]"
+                onClick={() => setActiveTab("bids")}
+              >
                 <h3 className="text-lg font-semibold mb-2">پیشنهادات</h3>
                 <div className="flex items-center gap-2 text-3xl font-bold text-yellow-500">
                   {formatNumber(dashboardData.bids.total)}
@@ -581,7 +846,10 @@ const AdminDashboard = () => {
                 </p>
               </div>
 
-              <div className="bg-[#192658] p-6 rounded-lg border border-theme-secondary/20">
+              <div
+                className="bg-[#192658] p-6 rounded-lg border border-theme-secondary/20 cursor-pointer hover:bg-[#1b2b61]"
+                onClick={() => setActiveTab("notifications")}
+              >
                 <h3 className="text-lg font-semibold mb-2">اعلان‌ها</h3>
                 <div className="text-3xl font-bold text-purple-500">
                   {dashboardData.notifications.total}
@@ -721,13 +989,78 @@ const AdminDashboard = () => {
                     setUserPage(1);
                     loadUsers();
                   }}
-                  className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600"
+                  disabled={listLoading.users}
+                  className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50"
                 >
-                  بروزرسانی
+                  {listLoading.users ? "در حال بروزرسانی..." : "بروزرسانی"}
                 </button>
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setUserActiveFilter("all");
+                    setUserSubFilter("all");
+                    setUserPage(1);
+                  }}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                >
+                  پاک‌سازی فیلترها
+                </button>
+                <select
+                  value={userActiveFilter}
+                  onChange={(e) => {
+                    setUserActiveFilter(e.target.value);
+                    setUserPage(1);
+                  }}
+                  className="px-2 py-2 border border-theme-secondary/20 rounded-lg bg-theme-primary text-theme-secondary"
+                  title="فیلتر وضعیت"
+                >
+                  <option value="all">همه وضعیت‌ها</option>
+                  <option value="active">فعال</option>
+                  <option value="inactive">غیرفعال</option>
+                </select>
+                <select
+                  value={userSubFilter}
+                  onChange={(e) => {
+                    setUserSubFilter(e.target.value);
+                    setUserPage(1);
+                  }}
+                  className="px-2 py-2 border border-theme-secondary/20 rounded-lg bg-theme-primary text-theme-secondary"
+                  title="فیلتر اشتراک"
+                >
+                  <option value="all">همه اشتراک‌ها</option>
+                  <option value="premium">پریمیوم</option>
+                  <option value="basic">عادی</option>
+                </select>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <span className="text-xs text-theme-secondary/70">
+                  انتخاب شده: {selectedItems.length}
+                </span>
+                <button
+                  onClick={handleSelectAll}
+                  className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700"
+                >
+                  انتخاب همه
+                </button>
+                <button
+                  onClick={() => setSelectedItems([])}
+                  className="px-4 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600"
+                >
+                  لغو انتخاب
+                </button>
+                <button
+                  onClick={handleSelectPage}
+                  className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700"
+                >
+                  انتخاب صفحه
+                </button>
+                <button
+                  onClick={invertSelection}
+                  className="px-4 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600"
+                >
+                  وارونه‌سازی انتخاب
+                </button>
                 <button
                   onClick={() => handleBulkAction("activate", "user")}
                   className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
@@ -741,10 +1074,28 @@ const AdminDashboard = () => {
                   غیرفعال کردن انتخاب شده
                 </button>
                 <button
+                  onClick={() => handleBulkAction("make_premium", "user")}
+                  className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
+                >
+                  اعطای پریمیوم
+                </button>
+                <button
+                  onClick={() => handleBulkAction("delete", "user")}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                  حذف انتخاب شده
+                </button>
+                <button
                   onClick={() => handleExportData("users")}
                   className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
                 >
                   صادرات
+                </button>
+                <button
+                  onClick={() => exportCurrentView("users_view", pagedUsers)}
+                  className="px-4 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800"
+                >
+                  صادرات نمای فعلی
                 </button>
               </div>
             </div>
@@ -837,6 +1188,34 @@ const AdminDashboard = () => {
                         <button className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
                           ویرایش
                         </button>
+                        <button
+                          onClick={() =>
+                            handleSingleAction(
+                              user.is_active ? "deactivate" : "activate",
+                              "user",
+                              user.id
+                            )
+                          }
+                          className="ml-2 px-3 py-1 bg-teal-600 text-white rounded text-sm hover:bg-teal-700"
+                        >
+                          {user.is_active ? "غیرفعال" : "فعال"}
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleSingleAction("make_premium", "user", user.id)
+                          }
+                          className="ml-2 px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700"
+                        >
+                          پریمیوم
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleSingleAction("delete", "user", user.id)
+                          }
+                          className="ml-2 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                        >
+                          حذف
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -908,13 +1287,66 @@ const AdminDashboard = () => {
                     setAuctionPage(1);
                     loadAuctions();
                   }}
-                  className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600"
+                  disabled={listLoading.auctions}
+                  className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50"
                 >
-                  بروزرسانی
+                  {listLoading.auctions ? "در حال بروزرسانی..." : "بروزرسانی"}
                 </button>
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setAuctionStatusFilter("all");
+                    setAuctionPage(1);
+                  }}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                >
+                  پاک‌سازی فیلترها
+                </button>
+                <select
+                  value={auctionStatusFilter}
+                  onChange={(e) => {
+                    setAuctionStatusFilter(e.target.value);
+                    setAuctionPage(1);
+                  }}
+                  className="px-2 py-2 border border-theme-secondary/20 rounded-lg bg-theme-primary text-theme-secondary"
+                  title="فیلتر وضعیت"
+                >
+                  <option value="all">همه وضعیت‌ها</option>
+                  <option value="active">فعال</option>
+                  <option value="pending_review">در انتظار بررسی</option>
+                  <option value="completed">تکمیل شده</option>
+                  <option value="inactive">غیرفعال</option>
+                </select>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <span className="text-xs text-theme-secondary/70">
+                  انتخاب شده: {selectedItems.length}
+                </span>
+                <button
+                  onClick={handleSelectAll}
+                  className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700"
+                >
+                  انتخاب همه
+                </button>
+                <button
+                  onClick={() => setSelectedItems([])}
+                  className="px-4 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600"
+                >
+                  لغو انتخاب
+                </button>
+                <button
+                  onClick={handleSelectPage}
+                  className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700"
+                >
+                  انتخاب صفحه
+                </button>
+                <button
+                  onClick={invertSelection}
+                  className="px-4 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600"
+                >
+                  وارونه‌سازی انتخاب
+                </button>
                 <button
                   onClick={() => handleBulkAction("activate", "auction")}
                   className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
@@ -928,10 +1360,24 @@ const AdminDashboard = () => {
                   غیرفعال کردن انتخاب شده
                 </button>
                 <button
+                  onClick={() => handleBulkAction("delete", "auction")}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                  حذف انتخاب شده
+                </button>
+                <button
                   onClick={() => handleExportData("auctions")}
                   className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
                 >
                   صادرات
+                </button>
+                <button
+                  onClick={() =>
+                    exportCurrentView("auctions_view", pagedAuctions)
+                  }
+                  className="px-4 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800"
+                >
+                  صادرات نمای فعلی
                 </button>
               </div>
             </div>
@@ -1040,6 +1486,28 @@ const AdminDashboard = () => {
                         <button className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
                           ویرایش
                         </button>
+                        <button
+                          onClick={() =>
+                            handleSingleAction(
+                              auction.status === "active"
+                                ? "deactivate"
+                                : "activate",
+                              "auction",
+                              auction.id
+                            )
+                          }
+                          className="ml-2 px-3 py-1 bg-teal-600 text-white rounded text-sm hover:bg-teal-700"
+                        >
+                          {auction.status === "active" ? "غیرفعال" : "فعال"}
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleSingleAction("delete", "auction", auction.id)
+                          }
+                          className="ml-2 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                        >
+                          حذف
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -1078,6 +1546,799 @@ const AdminDashboard = () => {
                     disabled={auctionPage >= auctionsTotalPages}
                     onClick={() =>
                       setAuctionPage((p) => Math.min(auctionsTotalPages, p + 1))
+                    }
+                    className="px-3 py-1 rounded bg-[#192658] border border-theme-secondary/20 disabled:opacity-50"
+                  >
+                    بعدی
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "tender" && (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="جستجو در مناقصه‌ها..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="px-4 py-2 border border-theme-secondary/20 rounded-lg bg-theme-primary text-theme-secondary"
+                />
+                <button
+                  onClick={loadTenders}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  جستجو
+                </button>
+                <button
+                  onClick={() => {
+                    loadTenders();
+                  }}
+                  disabled={listLoading.tender}
+                  className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50"
+                >
+                  {listLoading.tender ? "در حال بروزرسانی..." : "بروزرسانی"}
+                </button>
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setTenderStatusFilter("all");
+                    setTenderPage(1);
+                  }}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                >
+                  پاک‌سازی فیلترها
+                </button>
+                <select
+                  value={tenderStatusFilter}
+                  onChange={(e) => {
+                    setTenderStatusFilter(e.target.value);
+                    setTenderPage(1);
+                  }}
+                  className="px-2 py-2 border border-theme-secondary/20 rounded-lg bg-theme-primary text-theme-secondary"
+                  title="فیلتر وضعیت"
+                >
+                  <option value="all">همه وضعیت‌ها</option>
+                  <option value="active">فعال</option>
+                  <option value="pending_review">در انتظار بررسی</option>
+                  <option value="completed">تکمیل شده</option>
+                  <option value="inactive">غیرفعال</option>
+                </select>
+              </div>
+
+              <div className="flex gap-2 items-center">
+                <span className="text-xs text-theme-secondary/70">
+                  انتخاب شده: {selectedItems.length}
+                </span>
+                <button
+                  onClick={handleSelectAll}
+                  className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700"
+                >
+                  انتخاب همه
+                </button>
+                <button
+                  onClick={() => setSelectedItems([])}
+                  className="px-4 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600"
+                >
+                  لغو انتخاب
+                </button>
+                <button
+                  onClick={handleSelectPage}
+                  className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700"
+                >
+                  انتخاب صفحه
+                </button>
+                <button
+                  onClick={invertSelection}
+                  className="px-4 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600"
+                >
+                  وارونه‌سازی انتخاب
+                </button>
+                <button
+                  onClick={() => handleBulkAction("activate", "tender")}
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                >
+                  فعال کردن انتخاب شده
+                </button>
+                <button
+                  onClick={() => handleBulkAction("deactivate", "tender")}
+                  className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
+                >
+                  غیرفعال کردن انتخاب شده
+                </button>
+                <button
+                  onClick={() => handleBulkAction("delete", "tender")}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                  حذف انتخاب شده
+                </button>
+                <button
+                  onClick={() => handleExportData("tenders")}
+                  className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+                >
+                  صادرات
+                </button>
+                <button
+                  onClick={() =>
+                    exportCurrentView("tenders_view", pagedTenders)
+                  }
+                  className="px-4 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800"
+                >
+                  صادرات نمای فعلی
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-theme-secondary/10 rounded-lg border border-theme-secondary/20 overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-theme-secondary/20">
+                  <tr>
+                    <th className="px-4 py-3 text-right">
+                      <input
+                        type="checkbox"
+                        checked={
+                          selectedItems.length === filteredTenders.length &&
+                          filteredTenders.length > 0
+                        }
+                        onChange={handleSelectAll}
+                      />
+                    </th>
+                    <th
+                      className="px-4 py-3 text-right cursor-pointer"
+                      onClick={() =>
+                        toggleSort(setTenderSort, tenderSort, "title")
+                      }
+                    >
+                      عنوان{" "}
+                      {tenderSort.key === "title"
+                        ? tenderSort.dir === "asc"
+                          ? "▲"
+                          : "▼"
+                        : ""}
+                    </th>
+                    <th className="px-4 py-3 text-right">ایجادکننده</th>
+                    <th className="px-4 py-3 text-right">وضعیت</th>
+                    <th
+                      className="px-4 py-3 text-right cursor-pointer"
+                      onClick={() =>
+                        toggleSort(setTenderSort, tenderSort, "created_at")
+                      }
+                    >
+                      تاریخ ایجاد{" "}
+                      {tenderSort.key === "created_at"
+                        ? tenderSort.dir === "asc"
+                          ? "▲"
+                          : "▼"
+                        : ""}
+                    </th>
+                    <th className="px-4 py-3 text-right">عملیات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedTenders.map((t) => (
+                    <tr
+                      key={t.id}
+                      className="border-t border-theme-secondary/20"
+                    >
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.includes(t.id)}
+                          onChange={() => handleItemSelect(t.id)}
+                        />
+                      </td>
+                      <td className="px-4 py-3">{t.title}</td>
+                      <td className="px-4 py-3">
+                        {t.creator?.username || "-"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs ${
+                            t.status === "active"
+                              ? "bg-green-500 text-white"
+                              : t.status === "completed"
+                              ? "bg-blue-500 text-white"
+                              : "bg-red-500 text-white"
+                          }`}
+                        >
+                          {t.status || "-"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {t.created_at
+                          ? new Date(t.created_at).toLocaleDateString("fa-IR")
+                          : "-"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <button className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
+                          ویرایش
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleSingleAction(
+                              t.status === "active" ? "deactivate" : "activate",
+                              "tender",
+                              t.id
+                            )
+                          }
+                          className="ml-2 px-3 py-1 bg-teal-600 text-white rounded text-sm hover:bg-teal-700"
+                        >
+                          {t.status === "active" ? "غیرفعال" : "فعال"}
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleSingleAction("delete", "tender", t.id)
+                          }
+                          className="ml-2 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                        >
+                          حذف
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="flex items-center justify-between p-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">اندازه صفحه:</span>
+                  <select
+                    value={tenderPageSize}
+                    onChange={(e) => {
+                      setTenderPageSize(Number(e.target.value));
+                      setTenderPage(1);
+                    }}
+                    className="bg-[#192658] border border-theme-secondary/20 rounded px-2 py-1"
+                  >
+                    {[5, 10, 20, 50].map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={tenderPage <= 1}
+                    onClick={() => setTenderPage((p) => Math.max(1, p - 1))}
+                    className="px-3 py-1 rounded bg-[#192658] border border-theme-secondary/20 disabled:opacity-50"
+                  >
+                    قبلی
+                  </button>
+                  <span className="text-sm">
+                    صفحه {tenderPage} از {tendersTotalPages}
+                  </span>
+                  <button
+                    disabled={tenderPage >= tendersTotalPages}
+                    onClick={() =>
+                      setTenderPage((p) => Math.min(tendersTotalPages, p + 1))
+                    }
+                    className="px-3 py-1 rounded bg-[#192658] border border-theme-secondary/20 disabled:opacity-50"
+                  >
+                    بعدی
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "bids" && (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="جستجو در پیشنهادات..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="px-4 py-2 border border-theme-secondary/20 rounded-lg bg-theme-primary text-theme-secondary"
+                />
+                <button
+                  onClick={loadBids}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  جستجو
+                </button>
+                <button
+                  onClick={loadBids}
+                  disabled={listLoading.bids}
+                  className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50"
+                >
+                  {listLoading.bids ? "در حال بروزرسانی..." : "بروزرسانی"}
+                </button>
+                <select
+                  value={bidPageSize}
+                  onChange={(e) => {
+                    setBidPageSize(Number(e.target.value));
+                    setBidPage(1);
+                  }}
+                  className="px-2 py-2 border border-theme-secondary/20 rounded-lg bg-theme-primary text-theme-secondary"
+                  title="اندازه صفحه"
+                >
+                  {[5, 10, 20, 50].map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-2 items-center">
+                <span className="text-xs text-theme-secondary/70">
+                  انتخاب شده: {selectedItems.length}
+                </span>
+                <button
+                  onClick={handleSelectAll}
+                  className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700"
+                >
+                  انتخاب همه
+                </button>
+                <button
+                  onClick={() => setSelectedItems([])}
+                  className="px-4 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600"
+                >
+                  لغو انتخاب
+                </button>
+                <button
+                  onClick={handleSelectPage}
+                  className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700"
+                >
+                  انتخاب صفحه
+                </button>
+                <button
+                  onClick={invertSelection}
+                  className="px-4 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600"
+                >
+                  وارونه‌سازی انتخاب
+                </button>
+                <button
+                  onClick={() => handleBulkAction("refund", "bid")}
+                  className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
+                >
+                  بازگشت انتخاب شده
+                </button>
+                <button
+                  onClick={() => handleBulkAction("delete", "bid")}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                  حذف انتخاب شده
+                </button>
+                <button
+                  onClick={() => handleExportData("bids")}
+                  className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+                >
+                  صادرات
+                </button>
+                <button
+                  onClick={() => exportCurrentView("bids_view", pagedBids)}
+                  className="px-4 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800"
+                >
+                  صادرات نمای فعلی
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-theme-secondary/10 rounded-lg border border-theme-secondary/20 overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-theme-secondary/20">
+                  <tr>
+                    <th className="px-4 py-3 text-right">
+                      <input
+                        type="checkbox"
+                        checked={
+                          selectedItems.length === sortedBids.length &&
+                          sortedBids.length > 0
+                        }
+                        onChange={handleSelectAll}
+                      />
+                    </th>
+                    <th className="px-4 py-3 text-right">شناسه</th>
+                    <th className="px-4 py-3 text-right">مزایده</th>
+                    <th className="px-4 py-3 text-right">کاربر</th>
+                    <th
+                      className="px-4 py-3 text-right cursor-pointer"
+                      onClick={() => toggleSort(setBidSort, bidSort, "amount")}
+                    >
+                      مبلغ{" "}
+                      {bidSort.key === "amount"
+                        ? bidSort.dir === "asc"
+                          ? "▲"
+                          : "▼"
+                        : ""}
+                    </th>
+                    <th
+                      className="px-4 py-3 text-right cursor-pointer"
+                      onClick={() =>
+                        toggleSort(setBidSort, bidSort, "created_at")
+                      }
+                    >
+                      تاریخ{" "}
+                      {bidSort.key === "created_at"
+                        ? bidSort.dir === "asc"
+                          ? "▲"
+                          : "▼"
+                        : ""}
+                    </th>
+                    <th className="px-4 py-3 text-right">عملیات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedBids.map((b) => (
+                    <tr
+                      key={b.id}
+                      className="border-t border-theme-secondary/20"
+                    >
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.includes(b.id)}
+                          onChange={() => handleItemSelect(b.id)}
+                        />
+                      </td>
+                      <td className="px-4 py-3">{b.id}</td>
+                      <td className="px-4 py-3">{b.auction?.title || "-"}</td>
+                      <td className="px-4 py-3">{b.user?.username || "-"}</td>
+                      <td className="px-4 py-3">
+                        {b.amount?.toLocaleString() || "-"}
+                      </td>
+                      <td className="px-4 py-3">
+                        {b.created_at
+                          ? new Date(b.created_at).toLocaleString("fa-IR")
+                          : "-"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() =>
+                            handleSingleAction("refund", "bid", b.id)
+                          }
+                          className="px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700"
+                        >
+                          بازگشت
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleSingleAction("delete", "bid", b.id)
+                          }
+                          className="ml-2 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                        >
+                          حذف
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="flex items-center justify-between p-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">اندازه صفحه:</span>
+                  <select
+                    value={bidPageSize}
+                    onChange={(e) => {
+                      setBidPageSize(Number(e.target.value));
+                      setBidPage(1);
+                    }}
+                    className="bg-[#192658] border border-theme-secondary/20 rounded px-2 py-1"
+                  >
+                    {[5, 10, 20, 50].map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={bidPage <= 1}
+                    onClick={() => setBidPage((p) => Math.max(1, p - 1))}
+                    className="px-3 py-1 rounded bg-[#192658] border border-theme-secondary/20 disabled:opacity-50"
+                  >
+                    قبلی
+                  </button>
+                  <span className="text-sm">
+                    صفحه {bidPage} از {bidsTotalPages}
+                  </span>
+                  <button
+                    disabled={bidPage >= bidsTotalPages}
+                    onClick={() =>
+                      setBidPage((p) => Math.min(bidsTotalPages, p + 1))
+                    }
+                    className="px-3 py-1 rounded bg-[#192658] border border-theme-secondary/20 disabled:opacity-50"
+                  >
+                    بعدی
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "notifications" && (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="جستجو در اعلان‌ها..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="px-4 py-2 border border-theme-secondary/20 rounded-lg bg-theme-primary text-theme-secondary"
+                />
+                <button
+                  onClick={loadNotifications}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  جستجو
+                </button>
+                <button
+                  onClick={loadNotifications}
+                  disabled={listLoading.notifications}
+                  className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50"
+                >
+                  {listLoading.notifications
+                    ? "در حال بروزرسانی..."
+                    : "بروزرسانی"}
+                </button>
+              </div>
+              <div className="flex gap-2 items-center">
+                <span className="text-xs text-theme-secondary/70">
+                  انتخاب شده: {selectedItems.length}
+                </span>
+                <button
+                  onClick={handleSelectAll}
+                  className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700"
+                >
+                  انتخاب همه
+                </button>
+                <button
+                  onClick={() => setSelectedItems([])}
+                  className="px-4 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600"
+                >
+                  لغو انتخاب
+                </button>
+                <button
+                  onClick={handleSelectPage}
+                  className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700"
+                >
+                  انتخاب صفحه
+                </button>
+                <button
+                  onClick={invertSelection}
+                  className="px-4 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600"
+                >
+                  وارونه‌سازی انتخاب
+                </button>
+                <button
+                  onClick={() => handleBulkAction("mark_read", "notification")}
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                >
+                  علامت‌گذاری خوانده شده
+                </button>
+                <button
+                  onClick={() => handleBulkAction("delete", "notification")}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                  حذف انتخاب شده
+                </button>
+                <button
+                  onClick={() => handleExportData("notifications")}
+                  className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+                >
+                  صادرات
+                </button>
+                <button
+                  onClick={() =>
+                    exportCurrentView(
+                      "notifications_view",
+                      typeof pagedNotifications !== "undefined" &&
+                        pagedNotifications
+                        ? pagedNotifications
+                        : notifications
+                    )
+                  }
+                  className="px-4 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800"
+                >
+                  صادرات نمای فعلی
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-theme-secondary/10 rounded-lg border border-theme-secondary/20 overflow-hidden">
+              <ul className="p-4 space-y-3">
+                {notifications.length === 0 && (
+                  <li className="text-sm text-theme-secondary/70">
+                    موردی وجود ندارد
+                  </li>
+                )}
+                {notifications.map((n) => (
+                  <li key={n.id} className="flex justify-between items-start">
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.includes(n.id)}
+                        onChange={() => handleItemSelect(n.id)}
+                      />
+                      <div>
+                        <div className="font-medium">{n.title}</div>
+                        <div className="text-sm text-theme-secondary/70">
+                          {n.body}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-xs text-theme-secondary/60">
+                        {n.read ? "خوانده شده" : "نخوانده"} •{" "}
+                        {n.created_at
+                          ? new Date(n.created_at).toLocaleString("fa-IR")
+                          : "-"}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {!n.read && (
+                          <button
+                            onClick={() =>
+                              handleSingleAction(
+                                "mark_read",
+                                "notification",
+                                n.id
+                              )
+                            }
+                            className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700"
+                          >
+                            خواندن
+                          </button>
+                        )}
+                        <button
+                          onClick={() =>
+                            handleSingleAction("delete", "notification", n.id)
+                          }
+                          className="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "currencies" && (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="جستجو در ارزها..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="px-4 py-2 border border-theme-secondary/20 rounded-lg bg-theme-primary text-theme-secondary"
+                />
+                <button
+                  onClick={loadCurrencies}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  جستجو
+                </button>
+                <button
+                  onClick={loadCurrencies}
+                  disabled={listLoading.currencies}
+                  className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50"
+                >
+                  {listLoading.currencies ? "در حال بروزرسانی..." : "بروزرسانی"}
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleExportData("currencies")}
+                  className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+                >
+                  صادرات
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-theme-secondary/10 rounded-lg border border-theme-secondary/20 overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-theme-secondary/20">
+                  <tr>
+                    <th
+                      className="px-4 py-3 text-right cursor-pointer"
+                      onClick={() =>
+                        toggleSort(setCurrencySort, currencySort, "code")
+                      }
+                    >
+                      نماد{" "}
+                      {currencySort.key === "code"
+                        ? currencySort.dir === "asc"
+                          ? "▲"
+                          : "▼"
+                        : ""}
+                    </th>
+                    <th
+                      className="px-4 py-3 text-right cursor-pointer"
+                      onClick={() =>
+                        toggleSort(setCurrencySort, currencySort, "name")
+                      }
+                    >
+                      نام{" "}
+                      {currencySort.key === "name"
+                        ? currencySort.dir === "asc"
+                          ? "▲"
+                          : "▼"
+                        : ""}
+                    </th>
+                    <th
+                      className="px-4 py-3 text-right cursor-pointer"
+                      onClick={() =>
+                        toggleSort(setCurrencySort, currencySort, "price")
+                      }
+                    >
+                      قیمت{" "}
+                      {currencySort.key === "price"
+                        ? currencySort.dir === "asc"
+                          ? "▲"
+                          : "▼"
+                        : ""}
+                    </th>
+                    <th className="px-4 py-3 text-right">تغییر</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedCurrencies.map((c) => (
+                    <tr
+                      key={c.id}
+                      className="border-t border-theme-secondary/20"
+                    >
+                      <td className="px-4 py-3">{c.code}</td>
+                      <td className="px-4 py-3">{c.name}</td>
+                      <td className="px-4 py-3">
+                        {c.price?.toLocaleString() || "-"}
+                      </td>
+                      <td className="px-4 py-3">{c.change || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="flex items-center justify-between p-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">اندازه صفحه:</span>
+                  <select
+                    value={currencyPageSize}
+                    onChange={(e) => {
+                      setCurrencyPageSize(Number(e.target.value));
+                      setCurrencyPage(1);
+                    }}
+                    className="bg-[#192658] border border-theme-secondary/20 rounded px-2 py-1"
+                  >
+                    {[5, 10, 20, 50].map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={currencyPage <= 1}
+                    onClick={() => setCurrencyPage((p) => Math.max(1, p - 1))}
+                    className="px-3 py-1 rounded bg-[#192658] border border-theme-secondary/20 disabled:opacity-50"
+                  >
+                    قبلی
+                  </button>
+                  <span className="text-sm">
+                    صفحه {currencyPage} از {currenciesTotalPages}
+                  </span>
+                  <button
+                    disabled={currencyPage >= currenciesTotalPages}
+                    onClick={() =>
+                      setCurrencyPage((p) =>
+                        Math.min(currenciesTotalPages, p + 1)
+                      )
                     }
                     className="px-3 py-1 rounded bg-[#192658] border border-theme-secondary/20 disabled:opacity-50"
                   >

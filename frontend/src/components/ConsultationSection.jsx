@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { FaPhone, FaEnvelope, FaUser, FaComments, FaCheckCircle } from "react-icons/fa";
+import {
+  FaPhone,
+  FaEnvelope,
+  FaUser,
+  FaComments,
+  FaCheckCircle,
+} from "react-icons/fa";
 import { useTheme } from "../context/ThemeContext";
 import toast from "react-hot-toast";
 
@@ -25,18 +31,22 @@ const ConsultationSection = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formData.fullName.trim() || !formData.phone.trim() || !formData.message.trim()) {
+
+    if (
+      !formData.fullName.trim() ||
+      !formData.phone.trim() ||
+      !formData.message.trim()
+    ) {
       toast.error("لطفا فیلدهای ضروری را پر کنید");
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       toast.success("درخواست مشاوره شما با موفقیت ارسال شد");
       setIsSubmitted(true);
       setFormData({
@@ -57,32 +67,34 @@ const ConsultationSection = () => {
     {
       icon: "📊",
       title: "تحلیل تخصصی",
-      description: "تحلیل دقیق بازار و قیمت‌ها توسط کارشناسان مجرب"
+      description: "تحلیل دقیق بازار و قیمت‌ها توسط کارشناسان مجرب",
     },
     {
       icon: "🎯",
       title: "راهنمایی هدفمند",
-      description: "راهنمایی بر اساس نیازها و شرایط خاص شما"
+      description: "راهنمایی بر اساس نیازها و شرایط خاص شما",
     },
     {
       icon: "⚡",
       title: "پاسخ سریع",
-      description: "پاسخ‌دهی سریع و به موقع به درخواست‌های شما"
+      description: "پاسخ‌دهی سریع و به موقع به درخواست‌های شما",
     },
     {
       icon: "🔒",
       title: "مشاوره رایگان",
-      description: "مشاوره کاملاً رایگان و بدون هیچ هزینه‌ای"
-    }
+      description: "مشاوره کاملاً رایگان و بدون هیچ هزینه‌ای",
+    },
   ];
 
   if (isSubmitted) {
     return (
-      <div className={`py-16 transition-all duration-300 ${
-        isDarkMode 
-          ? "bg-gradient-to-br from-[#0E2148] to-[#483AA0]" 
-          : "bg-gradient-to-br from-[#604bfb] to-[#7c5cfb]"
-      }`}>
+      <div
+        className={`py-16 transition-all duration-300 ${
+          isDarkMode
+            ? "bg-gradient-to-br from-[#0E2148] to-[#483AA0]"
+            : "bg-gradient-to-br from-[#604bfb] to-[#7c5cfb]"
+        }`}
+      >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="bg-white rounded-2xl p-8 shadow-soft">
             <div className="flex justify-center mb-6">
@@ -109,18 +121,21 @@ const ConsultationSection = () => {
   }
 
   return (
-    <div className={`py-16 transition-all duration-300 ${
-      isDarkMode 
-        ? "bg-gradient-to-br from-[#0E2148] to-[#483AA0]" 
-        : "bg-gradient-to-br from-[#604bfb] to-[#7c5cfb]"
-    }`}>
+    <div
+      className={`py-16 transition-all duration-300 rounded-2xl ${
+        isDarkMode
+          ? "bg-gradient-to-br from-[#0E2148] to-[#483AA0]"
+          : "bg-gradient-to-br from-[#604bfb] to-[#7c5cfb]"
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
             دریافت مشاوره رایگان
           </h2>
           <p className="text-white/80 text-lg max-w-2xl mx-auto">
-            کارشناسان مجرب ما آماده ارائه مشاوره تخصصی در زمینه مزایده‌ها و مناقصه‌ها هستند
+            کارشناسان مجرب ما آماده ارائه مشاوره تخصصی در زمینه مزایده‌ها و
+            مناقصه‌ها هستند
           </p>
         </div>
 
@@ -170,7 +185,7 @@ const ConsultationSection = () => {
               <FaComments className="text-[#E3D095]" />
               درخواست مشاوره
             </h3>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -273,4 +288,4 @@ const ConsultationSection = () => {
   );
 };
 
-export default ConsultationSection; 
+export default ConsultationSection;

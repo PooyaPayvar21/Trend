@@ -12,7 +12,6 @@ import { useTheme } from "../context/ThemeContext";
 import HeroSection from "../components/HeroSection";
 import AuctionCards from "../components/AuctionCards";
 import FeaturesSection from "../components/FeaturesSection";
-import CurrencyRates from "../components/CurrencyRates";
 import NonMetalScrapPrices from "../components/NonMetalScrapPrices";
 import AuctionTrendCharts from "../components/AuctionTrendCharts";
 import ConsultationSection from "../components/ConsultationSection";
@@ -48,7 +47,7 @@ const Home = () => {
   return (
     <div
       dir="rtl"
-      className={`font-sans min-h-screen transition-all duration-300 ease-in-out ${
+      className={`font-sans min-h-screen transition-all duration-300 ease-in-out rounded-2xl ${
         isDarkMode
           ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
           : "bg-gradient-to-br from-gray-50 via-white to-gray-50"
@@ -182,16 +181,7 @@ const Home = () => {
       {/* Market Data Sections */}
       <section className="py-16">
         <div className="container mx-auto px-4 space-y-16">
-          <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 shadow-2xl">
-            {/* <div
-              className={`rounded-2xl p-8 backdrop-blur-sm border transition-all duration-300 flex justify-center items-center ${
-                isDarkMode
-                  ? "bg-white/5 border-white/10"
-                  : "bg-white/80 border-white/20 shadow-xl"
-              }`}
-            >
-              <CurrencyRates />
-            </div> */}
+          <div className="grid grid-cols-1 lg:grid-cols-1  gap-8">
             <div
               className={`rounded-2xl p-8 backdrop-blur-sm border transition-all duration-300 ${
                 isDarkMode
@@ -211,7 +201,7 @@ const Home = () => {
           </div>
 
           <div
-            className={`rounded-2xl p-8 backdrop-blur-sm shadow-2xl border transition-all duration-300 ${
+            className={`rounded-2xl p-8 backdrop-blur-sm border transition-all duration-300 ${
               isDarkMode
                 ? "bg-white/5 border-white/10"
                 : "bg-white/80 border-white/20 shadow-xl"
@@ -231,7 +221,7 @@ const Home = () => {
 
       {/* Consultation Section */}
       <section className="py-16">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 ">
           <ConsultationSection />
         </div>
       </section>

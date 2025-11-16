@@ -1,5 +1,7 @@
 import React from "react";
 import { useTheme } from "../context/ThemeContext";
+import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   FaGavel,
   FaCar,
@@ -7,6 +9,9 @@ import {
   FaIndustry,
   FaHome,
   FaFileContract,
+  FaMapMarkerAlt,
+  FaCalendarAlt,
+  FaBriefcase,
 } from "react-icons/fa";
 
 const features = [
@@ -17,6 +22,11 @@ const features = [
     color: "from-blue-500 to-cyan-500",
     bgColor: "bg-blue-50",
     textColor: "text-blue-600",
+    category: "خدمات IT",
+    location: "تهران",
+    deadline: "1404/09/05",
+    featured: true,
+    type: "auction",
   },
   {
     title: "مزایده‌های خودرو",
@@ -25,6 +35,11 @@ const features = [
     color: "from-red-500 to-pink-500",
     bgColor: "bg-red-50",
     textColor: "text-red-600",
+    category: "خودرو",
+    location: "تهران",
+    deadline: "1404/08/25",
+    featured: true,
+    type: "auction",
   },
   {
     title: "مزایده‌های وسایل و ساعت",
@@ -33,6 +48,11 @@ const features = [
     color: "from-purple-500 to-indigo-500",
     bgColor: "bg-purple-50",
     textColor: "text-purple-600",
+    category: "لوکس",
+    location: "اصفهان",
+    deadline: "1404/09/10",
+    featured: true,
+    type: "auction",
   },
   {
     title: "مزایده‌های رویدادهای صنعتی",
@@ -41,6 +61,11 @@ const features = [
     color: "from-orange-500 to-yellow-500",
     bgColor: "bg-orange-50",
     textColor: "text-orange-600",
+    category: "صنعت",
+    location: "تبریز",
+    deadline: "1404/09/15",
+    featured: true,
+    type: "auction",
   },
   {
     title: "مزایده‌های ملک",
@@ -49,6 +74,11 @@ const features = [
     color: "from-green-500 to-teal-500",
     bgColor: "bg-green-50",
     textColor: "text-green-600",
+    category: "املاک",
+    location: "شیراز",
+    deadline: "1404/09/20",
+    featured: true,
+    type: "auction",
   },
   {
     title: "ثبت قرارداد برای ایران",
@@ -57,11 +87,32 @@ const features = [
     color: "from-indigo-500 to-blue-500",
     bgColor: "bg-indigo-50",
     textColor: "text-indigo-600",
+    category: "قرارداد",
+    location: "مشهد",
+    deadline: "1404/09/30",
+    featured: true,
+    type: "tender",
   },
 ];
 
 const FeaturesSection = () => {
   const { isDarkMode } = useTheme();
+  const navigate = useNavigate();
+
+  const handleCardClick = (feature) => {
+    if (feature?.type === "tender") {
+      navigate("/create-tender", { state: { feature } });
+    } else {
+      navigate("/create-auction", { state: { feature } });
+    }
+  };
+
+  const handleKeyDown = (e, feature) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleCardClick(feature);
+    }
+  };
 
   return (
     <section
@@ -89,7 +140,7 @@ const FeaturesSection = () => {
               isDarkMode ? "text-white" : "text-gray-800"
             }`}
           >
-            جدیدترین آگهی ها
+            آگهی های ویژه
           </h2>
           <p
             className={`text-lg max-w-3xl mx-auto leading-relaxed ${
@@ -106,44 +157,52 @@ const FeaturesSection = () => {
           {features.map((feature, index) => {
             const IconComponent = feature.icon;
             return (
-              <div
+              <Link
                 key={index}
-                className={`group relative overflow-hidden rounded-2xl transition-all duration-500 hover:scale-105 hover:shadow-2xl ${
+                to={"/create-auction"}
+                state={{ feature }}
+                role="button"
+                tabIndex={0}
+                onClick={() => handleCardClick(feature)}
+                onKeyDown={(e) => handleKeyDown(e, feature)}
+                dir="rtl"
+                className={`relative overflow-hidden rounded-2xl transition-all duration-300 group block no-underline focus:outline-none ${
                   isDarkMode
-                    ? "bg-gray-800 border border-gray-700 hover:border-blue-500"
-                    : "bg-white border border-gray-200 hover:border-blue-500"
+                    ? "bg-gray-800 border border-gray-700 hover:shadow-lg"
+                    : "bg-white border border-green-200 hover:shadow-lg"
                 }`}
+                aria-label={`مشاهده آگهی: ${feature.title}`}
               >
-                {/* Background Gradient */}
-                <div
-                  className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}
-                ></div>
-
-                {/* Content */}
-                <div className="relative p-8">
-                  {/* Icon */}
-                  <div
-                    className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transform group-hover:rotate-12 transition-transform duration-300 ${
-                      isDarkMode
-                        ? "bg-gray-700 text-white"
-                        : `${feature.bgColor} ${feature.textColor}`
-                    }`}
-                  >
-                    <IconComponent className="w-8 h-8" />
+                {/* top-right badge (featured) */}
+                {feature.featured && (
+                  <div className="absolute -top-3 left-4 mt-4">
+                    <div className="bg-emerald-500 text-white text-xs font-medium px-3 py-1 rounded-tr-lg rounded-bl-lg">
+                      ویژه
+                    </div>
                   </div>
+                )}
 
-                  {/* Title */}
+                {/* small logo / tag at top-left */}
+                <div className="absolute -top-5 right-6 mt-6 ">
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm ${
+                      isDarkMode ? "bg-gray-700" : "bg-white"
+                    }`}
+                    aria-hidden
+                  >
+                    <IconComponent className={`w-6 h-6 ${feature.textColor}`} />
+                  </div>
+                </div>
+
+                {/* Card Content */}
+                <div className="relative p-6 pt-8 text-right h-full flex flex-col justify-between mt-7">
                   <h3
-                    className={`text-xl font-bold mb-4 transition-colors duration-300 ${
-                      isDarkMode
-                        ? "text-white group-hover:text-blue-400"
-                        : "text-gray-800 group-hover:text-blue-600"
+                    className={`text-lg font-bold mb-2 transition-colors duration-300 ${
+                      isDarkMode ? "text-white" : "text-gray-800"
                     }`}
                   >
                     {feature.title}
                   </h3>
-
-                  {/* Description */}
                   <p
                     className={`text-sm leading-relaxed mb-6 ${
                       isDarkMode ? "text-gray-300" : "text-gray-600"
@@ -152,46 +211,44 @@ const FeaturesSection = () => {
                     {feature.description}
                   </p>
 
-                  {/* Action Button */}
-                  <button
-                    className={`inline-flex items-center space-x-2 space-x-reverse text-sm font-medium transition-all duration-300 group-hover:translate-x-1 ${
-                      isDarkMode
-                        ? "text-blue-400 hover:text-blue-300"
-                        : "text-blue-600 hover:text-blue-700"
-                    }`}
-                  >
-                    <span>مشاهده جزئیات</span>
-                    <span className="transform group-hover:translate-x-1 transition-transform duration-300">
-                      →
-                    </span>
-                  </button>
+                  {/* meta row */}
+                  <div className="flex items-center justify-between gap-4 h-12">
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex items-center gap-2 bg-gray-100/60 dark:bg-gray-700/40 px-3 py-1 rounded-full text-xs text-gray-700 dark:text-gray-200">
+                        <FaBriefcase className="w-3 h-3" />
+                        <span>{feature.category}</span>
+                      </span>
+
+                      <span className="inline-flex items-center gap-2 bg-gray-100/60 dark:bg-gray-700/40 px-3 py-1 rounded-full text-xs text-gray-700 dark:text-gray-200">
+                        <FaMapMarkerAlt className="w-3 h-3" />
+                        <span>{feature.location}</span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-medium ${
+                          isDarkMode
+                            ? "bg-gray-700 text-gray-100"
+                            : "bg-white border border-gray-200 text-gray-700"
+                        }`}
+                      >
+                        <FaCalendarAlt className="w-3 h-3" />
+                        <span>{feature.deadline}</span>
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Hover Effect Border */}
+                {/* subtle border highlight when hovered */}
                 <div
-                  className={`absolute inset-0 border-2 rounded-2xl transition-all duration-300 pointer-events-none ${
-                    isDarkMode
-                      ? "border-blue-500 opacity-0 group-hover:opacity-30"
-                      : "border-blue-500 opacity-0 group-hover:opacity-30"
+                  className={`absolute inset-0 rounded-2xl pointer-events-none transition-opacity duration-300 ${
+                    isDarkMode ? "opacity-0 group-hover:opacity-0" : "opacity-0"
                   }`}
-                ></div>
-              </div>
+                />
+              </Link>
             );
           })}
-        </div>
-
-        {/* CTA Section */}
-        <div className="text-center mt-16">
-          <button
-            className={`group relative overflow-hidden rounded-full px-8 py-4 font-medium transition-all duration-300 hover:scale-105 ${
-              isDarkMode
-                ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-                : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-            }`}
-          >
-            <span className="relative z-10">مشاهده همه مناقصه‌ها</span>
-            <div className="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-          </button>
         </div>
       </div>
     </section>

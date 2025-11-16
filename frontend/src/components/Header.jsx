@@ -17,6 +17,8 @@ import {
   FaHammer,
   FaPlusCircle,
   FaUserShield,
+  FaGavel,
+  FaFileAlt,
 } from "react-icons/fa";
 import ThemeToggle from "./ThemeToggle";
 
@@ -62,9 +64,8 @@ const Header = () => {
 
   const navigationItems = [
     { path: "/", label: "صفحه اصلی", icon: FaHome },
-    { path: "/auctions", label: "مزایده‌", icon: FaHammer },
-    { path: "/trend", label: "مناقصه", icon: FaHammer },
-    { path: "/create-auction", label: "ایجاد مزایده", icon: FaPlusCircle },
+    { path: "/auctions", label: "مزایده‌", icon: FaGavel },
+    { path: "/trend", label: "مناقصه", icon: FaFileAlt },
   ];
 
   const adminItems = [
