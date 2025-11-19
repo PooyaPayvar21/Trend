@@ -124,16 +124,24 @@ const ConsultationSection = () => {
     <div
       className={`py-16 transition-all duration-300 rounded-2xl ${
         isDarkMode
-          ? "bg-gradient-to-br from-[#0E2148] to-[#483AA0]"
-          : "bg-gradient-to-br from-[#604bfb] to-[#7c5cfb]"
+          ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
+          : "bg-gradient-to-br from-gray-400 via-white to-slate-50 "
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <h2
+            className={`text-3xl sm:text-4xl font-bold mb-4 ${
+              isDarkMode ? "text-white" : "text-gray-800"
+            }`}
+          >
             دریافت مشاوره رایگان
           </h2>
-          <p className="text-white/80 text-lg max-w-2xl mx-auto">
+          <p
+            className={` text-lg max-w-2xl mx-auto ${
+              isDarkMode ? "text-gray-300" : "text-gray-600"
+            }`}
+          >
             کارشناسان مجرب ما آماده ارائه مشاوره تخصصی در زمینه مزایده‌ها و
             مناقصه‌ها هستند
           </p>
@@ -142,24 +150,30 @@ const ConsultationSection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Features */}
           <div className="space-y-6">
-            <h3 className="text-2xl font-bold text-white mb-6">
+            <h3
+              className={`text-2xl font-bold mb-6 ${
+                isDarkMode ? "text-white" : "text-gray-900"
+              }`}
+            >
               چرا مشاوره ما؟
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {consultationFeatures.map((feature, index) => (
                 <div
                   key={index}
-                  className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20"
+                  className={`bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 ${
+                    isDarkMode ? "text-white" : "text-gray-900"
+                  }`}
                 >
                   <div className="flex items-start gap-3">
                     <span className="text-2xl">{feature.icon}</span>
-                    <div>
-                      <h4 className="text-white font-semibold mb-1">
-                        {feature.title}
-                      </h4>
-                      <p className="text-white/70 text-sm">
-                        {feature.description}
-                      </p>
+                    <div
+                      className={`${
+                        isDarkMode ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      <h4 className=" font-semibold mb-1">{feature.title}</h4>
+                      <p className="text-sm">{feature.description}</p>
                     </div>
                   </div>
                 </div>

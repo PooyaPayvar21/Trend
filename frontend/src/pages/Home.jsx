@@ -114,8 +114,8 @@ const Home = () => {
           <div
             className={`rounded-3xl p-12 backdrop-blur-sm border transition-all duration-300 ${
               isDarkMode
-                ? "bg-white/5 border-white/10"
-                : "bg-white/80 border-white/20 shadow-2xl"
+                ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
+                : "bg-gradient-to-br from-gray-400 via-white to-slate-50"
             }`}
           >
             <div className="text-center mb-12">
@@ -185,8 +185,8 @@ const Home = () => {
             <div
               className={`rounded-2xl p-8 backdrop-blur-sm border transition-all duration-300 ${
                 isDarkMode
-                  ? "bg-white/5 border-white/10"
-                  : "bg-white/80 border-white/20 shadow-xl"
+                  ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
+                  : "bg-gradient-to-br from-gray-400 via-white to-slate-50"
               }`}
             >
               <h3
@@ -203,8 +203,8 @@ const Home = () => {
           <div
             className={`rounded-2xl p-8 backdrop-blur-sm border transition-all duration-300 ${
               isDarkMode
-                ? "bg-white/5 border-white/10"
-                : "bg-white/80 border-white/20 shadow-xl"
+                ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
+                : "bg-gradient-to-br from-gray-400 via-white to-slate-50"
             }`}
           >
             <h3

@@ -119,7 +119,7 @@ const FeaturesSection = () => {
       className={`py-16 transition-all duration-500 ${
         isDarkMode
           ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
-          : "bg-gradient-to-br from-slate-50 via-white to-slate-50"
+          : "bg-gradient-to-br from-gray-400 via-white to-slate-50"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -169,7 +169,7 @@ const FeaturesSection = () => {
                 className={`relative overflow-hidden rounded-2xl transition-all duration-300 group block no-underline focus:outline-none ${
                   isDarkMode
                     ? "bg-gray-800 border border-gray-700 hover:shadow-lg"
-                    : "bg-white border border-green-200 hover:shadow-lg"
+                    : "bg-gray-400 border-none hover:shadow-lg hover:scale-105"
                 }`}
                 aria-label={`مشاهده آگهی: ${feature.title}`}
               >
