@@ -27,6 +27,8 @@ import Privacy from "./pages/Privacy";
 import CreateAuction from "./pages/CreateAuction";
 import CreateTender from "./pages/CreateTender";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminDashboard2 from "./pages/AdminDashboard2";
+import Notifications from "./pages/Notifications";
 
 const AppContent = () => {
   const [showQuickRegister, setShowQuickRegister] = useState(false);
@@ -89,7 +91,9 @@ const AppContent = () => {
               <Route path="/subscription" element={<Subscription />} />
               <Route path="/create-auction" element={<CreateAuction />} />
               <Route path="/create-tender" element={<CreateTender />} />
-              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/notifications" element={<Notifications />} />
+              {/* <Route path="/admin" element={<AdminDashboard />} /> */}
+              <Route path="/admin" element={<AdminDashboard2 />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/login" element={<Login />} />

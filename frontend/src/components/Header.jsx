@@ -30,6 +30,11 @@ const Header = () => {
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isBellOpen, setIsBellOpen] = useState(false);
+  const [isUserOpen, setIsUserOpen] = useState(false);
+  const [hoverTimeout, setHoverTimeout] = useState(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -38,6 +43,22 @@ const Header = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        if (!user) return;
+        const { default: api } = await import("../api/index");
+        const res = await api.get("/notifications/");
+        const items = Array.isArray(res.data) ? res.data : [];
+        setNotifications(items.slice(0, 5));
+        setUnreadCount(items.filter((n) => !n.read).length);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchNotifications();
+  }, [user]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -74,7 +95,7 @@ const Header = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300${
         isScrolled
           ? isDarkMode
             ? "bg-slate-900/95 backdrop-blur-md shadow-2xl border-b border-slate-700/50"
@@ -84,7 +105,7 @@ const Header = () => {
           : "bg-transparent"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link
@@ -115,7 +136,7 @@ const Header = () => {
                 <button
                   key={item.path}
                   onClick={() => handleNavigation(item.path)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 cursor-pointer ${
                     isActivePath(item.path)
                       ? isDarkMode
                         ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg"
@@ -138,7 +159,7 @@ const Header = () => {
                   <button
                     key={item.path}
                     onClick={() => handleNavigation(item.path)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 cursor-pointer ${
                       isActivePath(item.path)
                         ? "bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg"
                         : isDarkMode
@@ -161,7 +182,7 @@ const Header = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="جستجوی مزایده‌ها..."
-                className={`w-full pl-12 pr-4 py-3 rounded-2xl border-2 transition-all duration-300 focus:ring-4 focus:ring-purple-500/20 ${
+                className={`w-full pl-12 pr-4 py-3 rounded-2xl border-2 transition-all duration-300 focus:ring-4 focus:ring-purple-500/20${
                   isDarkMode
                     ? "bg-slate-800/50 border-slate-600 text-white placeholder-gray-400 focus:border-purple-500"
                     : "bg-white/50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500"
@@ -169,7 +190,7 @@ const Header = () => {
               />
               <button
                 type="submit"
-                className={`absolute left-4 top-1/2 transform -translate-y-1/2 p-2 rounded-lg transition-all duration-300 ${
+                className={`absolute left-4 top-1/2 transform -translate-y-1/2 p-2 rounded-lg transition-all duration-300 cursor-pointer ${
                   isDarkMode
                     ? "text-gray-400 hover:text-purple-400"
                     : "text-gray-500 hover:text-purple-600"
@@ -186,43 +207,159 @@ const Header = () => {
 
             {user ? (
               <div className="flex items-center gap-3">
-                <button
-                  onClick={() => handleNavigation("/notifications")}
-                  className={`p-3 rounded-xl transition-all duration-300 relative ${
-                    isDarkMode
-                      ? "text-gray-300 hover:text-white hover:bg-white/10"
-                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                  }`}
+                <div
+                  className="relative"
+                  onMouseEnter={() => {
+                    if (hoverTimeout) clearTimeout(hoverTimeout);
+                    setIsBellOpen(true);
+                  }}
+                  onMouseLeave={() => {
+                    const t = setTimeout(() => setIsBellOpen(false), 150);
+                    setHoverTimeout(t);
+                  }}
                 >
-                  <FaBell className="text-lg" />
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-                </button>
+                  <button
+                    onClick={() => handleNavigation("/notifications")}
+                    className={`p-3 rounded-xl transition-all duration-300 relative ${
+                      isDarkMode
+                        ? "text-gray-300 hover:text-white hover:bg-white/10"
+                        : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                    }`}
+                  >
+                    <FaBell className="text-lg cursor-pointer" />
+                    {unreadCount > 0 && (
+                      <div className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-red-500 text-white text-[10px] leading-4 rounded-full flex items-center justify-center">
+                        {Math.min(unreadCount, 9)}
+                        {unreadCount > 9 ? "+" : ""}
+                      </div>
+                    )}
+                  </button>
+                  <div
+                    className={`absolute top-full right-0 mt-2 w-80 rounded-2xl shadow-2xl transition-all duration-200 z-50 ${
+                      isBellOpen ? "opacity-100 visible" : "opacity-0 invisible"
+                    } ${
+                      isDarkMode
+                        ? "bg-slate-800 border border-slate-700"
+                        : "bg-white border border-gray-200"
+                    }`}
+                  >
+                    <div className="p-3">
+                      <div
+                        className={`flex items-center justify-between mb-2 ${
+                          isDarkMode ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        <span className="text-sm font-semibold">
+                          اعلان‌های اخیر
+                        </span>
+                        <button
+                          onClick={() => handleNavigation("/notifications")}
+                          className={`text-xs px-2 py-1 rounded ${
+                            isDarkMode
+                              ? "bg-white/10 text-gray-200 hover:bg-white/20"
+                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          }`}
+                        >
+                          مشاهده همه
+                        </button>
+                      </div>
+                      <ul className="space-y-2 max-h-96 overflow-auto">
+                        {notifications.length === 0 && (
+                          <li
+                            className={`text-xs ${
+                              isDarkMode ? "text-gray-300" : "text-gray-600"
+                            }`}
+                          >
+                            اعلان جدیدی وجود ندارد
+                          </li>
+                        )}
+                        {notifications.map((n) => (
+                          <li
+                            key={n.id}
+                            className={`flex items-start gap-3 p-2 rounded-xl ${
+                              isDarkMode
+                                ? "hover:bg-white/5"
+                                : "hover:bg-gray-100"
+                            }`}
+                          >
+                            <div
+                              className={`mt-1 w-2 h-2 rounded-full ${
+                                n.read ? "bg-gray-300" : "bg-red-500"
+                              }`}
+                            />
+                            <div className="flex-1">
+                              <div
+                                className={`text-xs font-medium ${
+                                  isDarkMode ? "text-white" : "text-gray-900"
+                                }`}
+                              >
+                                {n.type}
+                              </div>
+                              <div
+                                className={`text-xs ${
+                                  isDarkMode ? "text-gray-300" : "text-gray-700"
+                                }`}
+                              >
+                                {n.message}
+                              </div>
+                              {n.created_at && (
+                                <div
+                                  className={`text-[10px] mt-1 ${
+                                    isDarkMode
+                                      ? "text-gray-400"
+                                      : "text-gray-500"
+                                  }`}
+                                >
+                                  {new Date(n.created_at).toLocaleString(
+                                    "fa-IR"
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
 
                 <button
                   onClick={() => handleNavigation("/dashboard")}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
                     isDarkMode
-                      ? "text-gray-300 hover:text-white hover:bg-white/10"
-                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                      ? "text-gray-300 hover:text-white hover:bg-white/10 cursor-pointer"
+                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100 cursor-pointer"
                   }`}
                 >
-                  <FaTachometerAlt className="text-sm" />
+                  <FaTachometerAlt className="text-sm " />
                   <span>داشبورد</span>
                 </button>
 
-                <div className="relative group">
+                <div
+                  className="relative"
+                  onMouseEnter={() => {
+                    if (hoverTimeout) clearTimeout(hoverTimeout);
+                    setIsUserOpen(true);
+                  }}
+                  onMouseLeave={() => {
+                    const t = setTimeout(() => setIsUserOpen(false), 150);
+                    setHoverTimeout(t);
+                  }}
+                >
                   <button
                     className={`flex items-center gap-2 p-2 rounded-xl transition-all duration-300 ${
                       isDarkMode
-                        ? "text-gray-300 hover:text-white"
-                        : "text-gray-700 hover:text-gray-900"
+                        ? "text-gray-300 hover:text-white cursor-pointer"
+                        : "text-gray-700 hover:text-gray-900 cursor-pointer"
                     }`}
                   >
-                    <FaUserCircle className="text-2xl" />
+                    <FaUserCircle className="text-2xl " />
                   </button>
 
                   <div
-                    className={`absolute top-full right-0 mt-2 w-48 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 ${
+                    className={`absolute top-full right-0 mt-2 w-48 rounded-2xl shadow-2xl transition-all duration-200 z-50 ${
+                      isUserOpen ? "opacity-100 visible" : "opacity-0 invisible"
+                    } ${
                       isDarkMode
                         ? "bg-slate-800 border border-slate-700"
                         : "bg-white border border-gray-200"
@@ -240,8 +377,8 @@ const Header = () => {
                         onClick={() => handleNavigation("/profile")}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-300 ${
                           isDarkMode
-                            ? "text-gray-300 hover:text-white hover:bg-white/10"
-                            : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                            ? "text-gray-300 hover:text-white hover:bg-white/10 cursor-pointer"
+                            : "text-gray-700 hover:text-gray-900 hover:bg-gray-100 cursor-pointer"
                         }`}
                       >
                         <FaUser className="text-sm" />
@@ -251,8 +388,8 @@ const Header = () => {
                         onClick={handleLogout}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-300 mt-2 ${
                           isDarkMode
-                            ? "text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                            : "text-red-600 hover:text-red-700 hover:bg-red-50"
+                            ? "text-red-400 hover:text-red-300 hover:bg-red-500/10 cursor-pointer"
+                            : "text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer"
                         }`}
                       >
                         <FaSignOutAlt className="text-sm" />
