@@ -1,84 +1,8 @@
-/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import LoadingSpinner from "./LoadingSpinner";
 import ErrorMessage from "./ErrorMessage";
-
-const auctions = [
-  {
-    title: "مزایده فروش زمین کشاورزی",
-    id: 1,
-    date: "۱۴۰۲/۱۲/۱۵",
-    deadline: "۱۴۰۲/۱۲/۳۰",
-    status: "فعال",
-    icon: "🏞️",
-    desc: "زمین کشاورزی ۵۰۰۰ متری با آب و برق در شمال کشور",
-    price: "۲.۵ میلیارد تومان",
-    location: "مازندران",
-    category: "املاک",
-  },
-  {
-    title: "مزایده فروش خودرو سواری",
-    id: 2,
-    date: "۱۴۰۲/۱۲/۱۵",
-    deadline: "۱۴۰۲/۱۲/۳۰",
-    status: "فعال",
-    icon: "🚗",
-    desc: "خودروی سواری مدل ۱۳۹۸ کم کارکرد، سالم و تمیز",
-    price: "۲۸۰ میلیون تومان",
-    location: "تهران",
-    category: "خودرو",
-  },
-  {
-    title: "مزایده تجهیزات صنعتی",
-    id: 3,
-    date: "۱۴۰۲/۱۲/۱۵",
-    deadline: "۱۴۰۲/۱۲/۳۰",
-    status: "فعال",
-    icon: "🛠️",
-    desc: "تجهیزات صنعتی نو و دست دوم، شامل دستگاه های CNC",
-    price: "۸۵۰ میلیون تومان",
-    location: "اصفهان",
-    category: "صنعتی",
-  },
-  {
-    title: "مزایده فروش آپارتمان",
-    id: 4,
-    date: "۱۴۰۲/۱۲/۱۵",
-    deadline: "۱۴۰۲/۱۲/۳۰",
-    status: "غیرفعال",
-    icon: "🏠",
-    desc: "آپارتمان ۳ خوابه ۱۲۰ متری در غرب تهران",
-    price: "۴.۲ میلیارد تومان",
-    location: "تهران",
-    category: "املاک",
-  },
-  {
-    title: "مزایده ماشین آلات کشاورزی",
-    id: 5,
-    date: "۱۴۰۲/۱۲/۱۸",
-    deadline: "۱۴۰۳/۰۱/۰۵",
-    status: "فعال",
-    icon: "🚜",
-    desc: "تراکتور، کمباین و ادوات کشاورزی با کارکرد کم",
-    price: "۱.۸ میلیارد تومان",
-    location: "خوزستان",
-    category: "کشاورزی",
-  },
-  {
-    title: "مزایده تجهیزات پزشکی",
-    id: 6,
-    date: "۱۴۰۲/۱۲/۲۰",
-    deadline: "۱۴۰۳/۰۱/۱۰",
-    status: "فعال",
-    icon: "🏥",
-    desc: "دستگاه های تصویربرداری و تجهیزات کلینیکی نو",
-    price: "۳.۵ میلیارد تومان",
-    location: "شیراز",
-    category: "پزشکی",
-  },
-];
 
 const CARDS_TO_SHOW = 3;
 const SLIDE_INTERVAL = 5000;
@@ -89,34 +13,91 @@ const AuctionCards = () => {
   const [animating, setAnimating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [auctions, setAuctions] = useState([]);
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
 
-  // Simulate loading and error states
+  const statusFa = (s) => {
+    switch (s) {
+      case "active":
+        return "فعال";
+      case "inactive":
+        return "غیرفعال";
+      case "completed":
+        return "تکمیل شده";
+      case "cancelled":
+        return "لغو شده";
+      case "pending_review":
+        return "در حال بررسی";
+      case "rejected":
+        return "رد شده";
+      default:
+        return s || "";
+    }
+  };
+
+  const categoryFa = (c) => {
+    const v = String(c || "").toLowerCase();
+    if (v.includes("property")) return "املاک";
+    if (v.includes("vehicle") || v.includes("car")) return "خودرو";
+    if (v.includes("industrial") || v.includes("industry")) return "صنعتی";
+    if (v.includes("agric") || v.includes("farm")) return "کشاورزی";
+    if (v.includes("medical") || v.includes("health")) return "پزشکی";
+    return "سایر";
+  };
+
+  const categoryIcon = (fa) => {
+    switch (fa) {
+      case "املاک":
+        return "🏠";
+      case "خودرو":
+        return "🚗";
+      case "صنعتی":
+        return "🛠️";
+      case "کشاورزی":
+        return "🚜";
+      case "پزشکی":
+        return "🏥";
+      default:
+        return "📦";
+    }
+  };
+
   useEffect(() => {
-    const loadData = async () => {
+    const load = async () => {
       try {
-        // Simulate API call delay
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-
-        // Simulate random error (10% chance)
-        if (Math.random() < 0.1) {
-          throw new Error("خطا در دریافت اطلاعات مزایده‌ها");
-        }
-
-        setLoading(false);
-      } catch (err) {
-        setError(err.message);
+        setLoading(true);
+        setError(null);
+        const { default: api } = await import("../api/index");
+        const res = await api.get("/auctions/");
+        const data = Array.isArray(res.data) ? res.data : res.data?.results || [];
+        const mapped = data.map((a) => {
+          const catFa = categoryFa(a.category);
+          return {
+            id: a.id,
+            title: a.title,
+            date: a.start_date ? new Date(a.start_date).toLocaleDateString("fa-IR") : "",
+            deadline: a.end_date ? new Date(a.end_date).toLocaleDateString("fa-IR") : "",
+            status: statusFa(a.status),
+            icon: categoryIcon(catFa),
+            desc: a.description,
+            price: new Intl.NumberFormat("fa-IR").format(Number(a.starting_price || a.current_price || 0)) + " تومان",
+            location: a.location || "",
+            category: catFa,
+          };
+        });
+        setAuctions(mapped);
+      } catch (e) {
+        setError(e?.response?.data?.detail || e?.message || "خطا در دریافت اطلاعات مزایده‌ها");
+      } finally {
         setLoading(false);
       }
     };
-
-    loadData();
+    load();
   }, []);
 
   useEffect(() => {
-    if (loading || error) return;
-
+    if (loading || error || auctions.length === 0) return;
     const interval = setInterval(() => {
       setAnimating(true);
       setTimeout(() => {
@@ -125,25 +106,43 @@ const AuctionCards = () => {
       }, ANIMATION_DURATION);
     }, SLIDE_INTERVAL);
     return () => clearInterval(interval);
-  }, [loading, error]);
+  }, [loading, error, auctions]);
 
   const handleCardClick = (auctionId) => {
     navigate(`/auctions/${auctionId}`);
   };
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
     setError(null);
     setLoading(true);
-    // Retry loading logic
-    setTimeout(() => {
+    try {
+      const { default: api } = await import("../api/index");
+      const res = await api.get("/auctions/");
+      const data = Array.isArray(res.data) ? res.data : res.data?.results || [];
+      const mapped = data.map((a) => {
+        const catFa = categoryFa(a.category);
+        return {
+          id: a.id,
+          title: a.title,
+          date: a.start_date ? new Date(a.start_date).toLocaleDateString("fa-IR") : "",
+          deadline: a.end_date ? new Date(a.end_date).toLocaleDateString("fa-IR") : "",
+          status: statusFa(a.status),
+          icon: categoryIcon(catFa),
+          desc: a.description,
+          price: new Intl.NumberFormat("fa-IR").format(Number(a.starting_price || a.current_price || 0)) + " تومان",
+          location: a.location || "",
+          category: catFa,
+        };
+      });
+      setAuctions(mapped);
+    } catch (e) {
+      setError(e?.response?.data?.detail || e?.message || "خطا در دریافت اطلاعات مزایده‌ها");
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
-  const visibleAuctions = [...auctions, ...auctions].slice(
-    current,
-    current + CARDS_TO_SHOW
-  );
+  const visibleAuctions = [...auctions, ...auctions].slice(current, current + CARDS_TO_SHOW);
 
   const getStatusColor = (status) => {
     return status === "فعال"

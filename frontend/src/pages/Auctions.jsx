@@ -4,102 +4,6 @@ import PersianDateTime from "../components/PersianDateTime";
 import { useTheme } from "../context/ThemeContext";
 import ConsultationSection from "../components/ConsultationSection";
 
-const auctions = [
-  {
-    id: 1,
-    title: "مزایده فروش زمین",
-    description: "زمین کشاورزی ۵۰۰۰ متری در شمال کشور",
-    price: "۲,۵۰۰,۰۰۰,۰۰۰",
-    deadline: "2024-03-20T10:00:00",
-    status: "فعال",
-    location: "شمال کشور",
-    area: "۵۰۰۰ متر",
-    type: "زمین کشاورزی",
-    details:
-      "این زمین در منطقه حاصلخیز شمال کشور واقع شده و دارای دسترسی مناسب به جاده اصلی است. دارای مجوزهای لازم برای کشاورزی و امکان احداث سازه های مورد نیاز می باشد.",
-    contact: "۰۹۱۲۳۴۵۶۷۸۹",
-    documents: ["سند مالکیت", "مشخصات فنی", "نقشه موقعیت"],
-  },
-  {
-    id: 2,
-    title: "مزایده فروش خودرو",
-    description: "خودروی سواری مدل ۱۳۹۸ کم کارکرد",
-    price: "۸۵۰,۰۰۰,۰۰۰",
-    deadline: "2024-03-15T14:30:00",
-    status: "فعال",
-    brand: "تویوتا",
-    model: "کمری",
-    year: "۱۳۹۸",
-    mileage: "۳۵,۰۰۰",
-    details:
-      "خودروی کم کارکرد با رنگ اصلی و بدون تصادف. تمام سرویس‌های دوره‌ای انجام شده و دارای بیمه شخص ثالث می‌باشد.",
-    contact: "۰۹۱۲۳۴۵۶۷۸۹",
-    documents: ["کارت ماشین", "بیمه نامه", "گواهی سلامت فنی"],
-  },
-  {
-    id: 3,
-    title: "مزایده فروش خودرو",
-    description: "خودروی سواری مدل ۱۳۹۸ کم کارکرد",
-    price: "۸۵۰,۰۰۰,۰۰۰",
-    deadline: "2024-03-18T09:00:00",
-    status: "فعال",
-    brand: "تویوتا",
-    model: "کمری",
-    year: "۱۳۹۸",
-    mileage: "۳۵,۰۰۰",
-    details:
-      "خودروی کم کارکرد با رنگ اصلی و بدون تصادف. تمام سرویس‌های دوره‌ای انجام شده و دارای بیمه شخص ثالث می‌باشد.",
-    contact: "۰۹۱۲۳۴۵۶۷۸۹",
-    documents: ["کارت ماشین", "بیمه نامه", "گواهی سلامت فنی"],
-  },
-  {
-    id: 4,
-    title: "مزایده فروش خودرو",
-    description: "خودروی سواری مدل ۱۳۹۸ کم کارکرد",
-    price: "۸۵۰,۰۰۰,۰۰۰",
-    deadline: "2024-03-10T16:00:00",
-    status: "غیرفعال",
-    brand: "تویوتا",
-    model: "کمری",
-    year: "۱۳۹۸",
-    mileage: "۳۵,۰۰۰",
-    details:
-      "خودروی کم کارکرد با رنگ اصلی و بدون تصادف. تمام سرویس‌های دوره‌ای انجام شده و دارای بیمه شخص ثالث می‌باشد.",
-    contact: "۰۹۱۲۳۴۵۶۷۸۹",
-    documents: ["کارت ماشین", "بیمه نامه", "گواهی سلامت فنی"],
-  },
-  {
-    id: 5,
-    title: "مزایده فروش خودرو",
-    description: "خودروی سواری مدل ۱۳۹۸ کم کارکرد",
-    price: "۸۵۰,۰۰۰,۰۰۰",
-    deadline: "2024-03-08T11:30:00",
-    status: "غیرفعال",
-    brand: "تویوتا",
-    model: "کمری",
-    year: "۱۳۹۸",
-    mileage: "۳۵,۰۰۰",
-    details:
-      "خودروی کم کارکرد با رنگ اصلی و بدون تصادف. تمام سرویس‌های دوره‌ای انجام شده و دارای بیمه شخص ثالث می‌باشد.",
-    contact: "۰۹۱۲۳۴۵۶۷۸۹",
-    documents: ["کارت ماشین", "بیمه نامه", "گواهی سلامت فنی"],
-  },
-  {
-    id: 6,
-    title: "مزایده فروش تجهیزات",
-    description: "تجهیزات صنعتی نو و دست دوم",
-    price: "۱,۲۰۰,۰۰۰,۰۰۰",
-    deadline: "2024-03-05T13:45:00",
-    status: "غیرفعال",
-    category: "تجهیزات صنعتی",
-    condition: "نو و دست دوم",
-    details:
-      "مجموعه‌ای از تجهیزات صنعتی نو و دست دوم شامل دستگاه‌های CNC، ابزارآلات و ماشین‌آلات صنعتی. تمامی تجهیزات دارای گارانتی و خدمات پس از فروش می‌باشند.",
-    contact: "۰۹۱۲۳۴۵۶۷۸۹",
-    documents: ["فاکتور خرید", "گارانتی", "مشخصات فنی"],
-  },
-];
-
 const slides = [
   {
     bg: "from-[#0E2148] to-[#483AA0]",
@@ -126,9 +30,8 @@ const Auctions = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
-  const [selectedAuction, setSelectedAuction] = useState(
-    id ? auctions.find((auction) => auction.id === Number(id)) : null
-  );
+  const [auctions, setAuctions] = useState([]);
+  const [selectedAuction, setSelectedAuction] = useState(null);
   const [filter, setFilter] = useState(null);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -142,6 +45,24 @@ const Auctions = () => {
   const [sortKey, setSortKey] = useState("deadline_desc");
   const [pageSize, setPageSize] = useState(6);
   const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    const loadAuctions = async () => {
+      try {
+        const { default: api } = await import("../api/index");
+        const res = await api.get("/auctions/");
+        const data = Array.isArray(res.data) ? res.data : res.data?.results || [];
+        setAuctions(data);
+        if (id) {
+          const found = data.find((a) => a.id === Number(id));
+          setSelectedAuction(found || null);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    loadAuctions();
+  }, [id]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(searchQuery), 250);
@@ -161,7 +82,7 @@ const Auctions = () => {
 
   const handleAuctionClick = (auctionId) => {
     navigate(`/auctions/${auctionId}`);
-    setSelectedAuction(auctions.find((auction) => auction.id === auctionId));
+    setSelectedAuction(auctions.find((auction) => auction.id === auctionId) || null);
     setFormData({
       fullName: "",
       mobile: "",
@@ -200,21 +121,12 @@ const Auctions = () => {
   const q = debouncedQuery.trim().toLowerCase();
   const visibleAuctions = auctions
     .filter((a) => !filter || a.status === filter)
-    .filter(
-      (a) =>
-        !q ||
-        [
-          a.title,
-          a.description,
-          a.location,
-          a.brand,
-          a.model,
-          a.category,
-          a.type,
-        ]
-          .filter(Boolean)
-          .some((v) => String(v).toLowerCase().includes(q))
-    );
+    .filter((a) => {
+      const hay = [a.title, a.description, a.location, a.category, a.condition]
+        .filter(Boolean)
+        .map((v) => String(v).toLowerCase());
+      return !q || hay.some((v) => v.includes(q));
+    });
 
   const toEnglishDigits = (str) =>
     String(str)
@@ -222,9 +134,9 @@ const Auctions = () => {
       .replace(/[٠-٩]/g, (d) => "0123456789"["٠١٢٣٤٥٦٧٨٩".indexOf(d)]);
 
   const parsePrice = (price) => {
-    if (!price) return 0;
-    const digits = toEnglishDigits(price).replace(/[^0-9]/g, "");
-    return Number(digits || 0);
+    if (price == null) return 0;
+    const n = Number(price);
+    return isFinite(n) ? n : 0;
   };
 
   const sortedAuctions = [...visibleAuctions].sort((a, b) => {
@@ -268,9 +180,7 @@ const Auctions = () => {
 
           <div className="bg-white rounded-2xl shadow-soft p-4 sm:p-8 border border-[#E3D095]/20">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-                {selectedAuction.title}
-              </h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{selectedAuction.title}</h1>
               <span
                 className={`rounded-full px-4 py-1 text-sm font-medium w-fit ${
                   selectedAuction.status === "فعال"
@@ -300,20 +210,14 @@ const Auctions = () => {
                   <div className="space-y-2 text-sm sm:text-base">
                     <div className="flex justify-between">
                       <span className="text-gray-600">قیمت پایه:</span>
-                      <span
-                        className={`font-semibold ${
-                          selectedAuction.status === "فعال"
-                            ? "text-[#00A592]"
-                            : "text-red-500"
-                        }`}
-                      >
-                        {selectedAuction.price} تومان
+                      <span className={`font-semibold ${selectedAuction.status === "active" ? "text-[#00A592]" : "text-red-500"}`}>
+                        {new Intl.NumberFormat("fa-IR").format(parsePrice(selectedAuction.starting_price))} تومان
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">مهلت ثبت نام:</span>
                       <span className="font-semibold">
-                        <PersianDateTime dateTime={selectedAuction.deadline} />
+                        <PersianDateTime dateTime={selectedAuction.end_date} />
                       </span>
                     </div>
                     {selectedAuction.location && (
@@ -321,14 +225,6 @@ const Auctions = () => {
                         <span className="text-gray-600">موقعیت:</span>
                         <span className="font-semibold">
                           {selectedAuction.location}
-                        </span>
-                      </div>
-                    )}
-                    {selectedAuction.area && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">مساحت:</span>
-                        <span className="font-semibold">
-                          {selectedAuction.area}
                         </span>
                       </div>
                     )}
@@ -426,7 +322,7 @@ const Auctions = () => {
                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                   >
-                    {selectedAuction.status === "فعال"
+                    {selectedAuction.status === "active"
                       ? isFormValid()
                         ? "ثبت نام در مزایده"
                         : "لطفا تمام فیلدها را پر کنید"
@@ -449,8 +345,8 @@ const Auctions = () => {
 
   const calculateActiveTotalValue = () => {
     return auctions
-      .filter((a) => a.status === "فعال")
-      .reduce((total, auction) => total + parsePrice(auction.price), 0)
+      .filter((a) => a.status === "active")
+      .reduce((total, auction) => total + parsePrice(auction.starting_price), 0)
       .toLocaleString("fa-IR");
   };
 
@@ -472,10 +368,8 @@ const Auctions = () => {
     const now = Date.now();
     const sevenDays = 7 * 24 * 60 * 60 * 1000;
     return auctions.filter((a) => {
-      const deadline = new Date(a.deadline).getTime();
-      return (
-        a.status === "فعال" && deadline >= now && deadline - now <= sevenDays
-      );
+      const deadline = new Date(a.end_date).getTime();
+      return a.status === "active" && deadline >= now && deadline - now <= sevenDays;
     }).length;
   };
 
@@ -493,11 +387,11 @@ const Auctions = () => {
     {
       key: "active",
       title: "مزایده‌های فعال",
-      value: auctions.filter((a) => a.status === "فعال").length,
+      value: auctions.filter((a) => a.status === "active").length,
       icon: "✅",
       color: "from-green-500/20 to-green-600/20",
-      onClick: () => setFilter("فعال"),
-      isActive: () => filter === "فعال",
+      onClick: () => setFilter("active"),
+      isActive: () => filter === "active",
       hint: "فقط فعال‌ها",
     },
     {

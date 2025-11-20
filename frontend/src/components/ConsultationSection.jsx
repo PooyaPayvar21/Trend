@@ -125,7 +125,7 @@ const ConsultationSection = () => {
       className={`py-16 transition-all duration-300 rounded-2xl ${
         isDarkMode
           ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
-          : "bg-gradient-to-br from-gray-400 via-white to-slate-50 "
+          : "bg-gradient-to-br from-gray-400 via-white to-slate-800"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

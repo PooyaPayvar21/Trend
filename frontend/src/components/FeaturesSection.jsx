@@ -169,7 +169,7 @@ const FeaturesSection = () => {
                 className={`relative overflow-hidden rounded-2xl transition-all duration-300 group block no-underline focus:outline-none ${
                   isDarkMode
                     ? "bg-gray-800 border border-gray-700 hover:shadow-lg"
-                    : "bg-gray-400 border-none hover:shadow-lg hover:scale-105"
+                    : "bg-gray-400 border border-none hover:shadow-lg hover:scale-105"
                 }`}
                 aria-label={`مشاهده آگهی: ${feature.title}`}
               >

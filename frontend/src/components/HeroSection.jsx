@@ -121,7 +121,7 @@ const HeroSection = () => {
 
   return (
     <section
-      className={`relative min-h-[85vh] flex items-center justify-center overflow-hidden transition-all duration-1000 ${
+      className={`relative min-h-[85vh] flex items-center justify-center overflow-hidden transition-all duration-1000 rounded-2xl${
         isDarkMode
           ? "bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800"
           : "bg-gradient-to-br from-slate-50 via-white to-blue-50"

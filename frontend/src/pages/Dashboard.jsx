@@ -53,143 +53,58 @@ const Dashboard = () => {
   }, [user]);
 
   useEffect(() => {
-    setTimeout(() => {
-      setFinancialData({
-        totalBids: 24,
-        totalWon: 8,
-        totalSpent: 125000000,
-        activeAuctions: 3,
-        monthlySpending: 45000000,
-        profitLoss: 15000000,
-      });
+    const loadData = async () => {
+      try {
+        const { default: api } = await import("../api/index");
+        const res = await api.get("/profile/auctions/");
+        const created = res.data?.created_auctions || [];
+        const participated = res.data?.participated_auctions || [];
+        const won = res.data?.won_auctions || [];
 
-      const auctionsData = [
-        {
-          id: 1,
-          title: "خودرو BMW X5 مدل 2022",
-          description: "خودرو لوکس BMW X5 با موتور 3.0 لیتری و امکانات کامل",
-          status: "won",
-          amount: 85000000,
-          date: "2024-03-20",
-          profit: 5000000,
-          category: "vehicle",
-          currentBid: 85000000,
-          startTime: "14:00",
-          endTime: "16:30",
-          duration: "2 ساعت و 30 دقیقه",
-          location: "تهران، خیابان ولیعصر",
-          condition: "عالی",
-          participants: 12,
-          bidCount: 8,
-          winner: "احمد محمدی",
-          fullDescription:
-            "این خودرو با موتور 3.0 لیتری توربوشارژر، گیربکس 8 سرعته اتوماتیک و امکانات کامل شامل سیستم ناوبری، دوربین 360 درجه، صندلی‌های چرمی و سیستم صوتی حرفه‌ای عرضه می‌شود. خودرو در شرایط عالی و با کارکرد کم در مزایده شرکت داده شده است.",
-        },
-        {
-          id: 2,
-          title: "ملک مسکونی 200 متری در منطقه 1 تهران",
-          description: "آپارتمان لوکس در منطقه 1 تهران با امکانات کامل",
-          status: "active",
-          amount: 120000000,
-          date: "2024-03-18",
-          currentBid: 125000000,
-          category: "property",
-          startTime: "10:00",
-          endTime: "12:00",
-          duration: "2 ساعت",
-          location: "تهران، منطقه 1، خیابان فرمانیه",
-          condition: "نوساز",
-          participants: 8,
-          bidCount: 5,
-          fullDescription:
-            "آپارتمان 200 متری در منطقه 1 تهران با 3 خواب، 2 سرویس بهداشتی، آشپزخانه مجهز، بالکن و پارکینگ. این ملک در طبقه 8 ساختمان 12 واحدی قرار دارد و دارای نمای آفتابگیر و دسترسی عالی به امکانات شهری است.",
-        },
-        {
-          id: 3,
-          title: "سکه طلای تمام بهار آزادی",
-          description: "سکه طلای تمام بهار آزادی با وزن 8.13 گرم",
-          status: "lost",
-          amount: 15000000,
-          date: "2024-03-15",
-          finalPrice: 16500000,
-          category: "precious_metal",
-          startTime: "15:00",
-          endTime: "15:30",
-          duration: "30 دقیقه",
-          location: "تهران، مرکز طلا و جواهر",
-          condition: "نو",
-          participants: 25,
-          bidCount: 15,
-          winner: "علی رضایی",
-          fullDescription:
-            "سکه طلای تمام بهار آزادی با وزن 8.13 گرم و عیار 900 که در سال 1357 ضرب شده است. این سکه در شرایط عالی و بدون هیچ گونه خراش یا آسیب نگهداری شده است.",
-        },
-        {
-          id: 4,
-          title: "لپ‌تاپ Dell XPS 15 اینچی",
-          description: "لپ‌تاپ حرفه‌ای Dell XPS با پردازنده Intel i7",
-          status: "won",
-          amount: 25000000,
-          date: "2024-03-10",
-          profit: 2000000,
-          category: "electronics",
-          currentBid: 25000000,
-          startTime: "11:00",
-          endTime: "11:45",
-          duration: "45 دقیقه",
-          location: "تهران، خیابان انقلاب",
-          condition: "مثل نو",
-          participants: 6,
-          bidCount: 4,
-          winner: "سارا احمدی",
-          fullDescription:
-            "لپ‌تاپ Dell XPS 15 اینچی با پردازنده Intel Core i7-12700H، رم 16GB، هارد 512GB SSD، کارت گرافیک RTX 3050 و نمایشگر 4K. این لپ‌تاپ برای کارهای حرفه‌ای و بازی مناسب است.",
-        },
-        {
-          id: 5,
-          title: "ماشین آلات صنعتی CNC",
-          description: "دستگاه CNC 5 محوره برای کارگاه‌های صنعتی",
-          status: "active",
-          amount: 80000000,
-          date: "2024-03-12",
-          currentBid: 85000000,
-          category: "industrial",
-          startTime: "09:00",
-          endTime: "11:00",
-          duration: "2 ساعت",
-          location: "اصفهان، شهرک صنعتی",
-          condition: "کارکرده",
-          participants: 4,
-          bidCount: 3,
-          fullDescription:
-            "دستگاه CNC 5 محوره با قابلیت تراشکاری و فرزکاری فلزات. این دستگاه مناسب برای کارگاه‌های صنعتی و تولید قطعات دقیق است. شامل نرم‌افزار کنترل و ابزارهای جانبی می‌باشد.",
-        },
-        {
-          id: 6,
-          title: "ساعت Rolex Submariner",
-          description: "ساعت لوکس Rolex Submariner مدل 2020",
-          status: "lost",
-          amount: 45000000,
-          date: "2024-03-08",
-          finalPrice: 52000000,
-          category: "luxury",
-          startTime: "16:00",
-          endTime: "16:20",
-          duration: "20 دقیقه",
-          location: "تهران، مرکز خرید تیراژه",
-          condition: "مثل نو",
-          participants: 18,
-          bidCount: 12,
-          winner: "محمد کریمی",
-          fullDescription:
-            "ساعت لوکس Rolex Submariner با قابلیت ضد آب تا عمق 300 متر. این ساعت دارای کریستال یاقوت، بند فلزی و موتور خودکار است. مناسب برای استفاده روزانه و ورزش‌های آبی.",
-        },
-      ];
+        const wonIds = new Set(won.map((a) => a.id));
+        const normalize = (a) => ({
+          id: a.id,
+          title: a.title,
+          description: a.description,
+          status: wonIds.has(a.id) ? "won" : a.status === "active" ? "active" : "lost",
+          amount: Number(a.current_price || a.starting_price || 0),
+          date: a.created_at || a.end_date,
+          category: a.category,
+          location: a.location,
+          condition: a.condition,
+          winner: a.winner?.username,
+          fullDescription: a.description,
+        });
 
-      setAllAuctions(auctionsData);
-      setFilteredAuctions(auctionsData.slice(0, 3));
-      setLoading(false);
-    }, 1000);
+        const auctionsData = [
+          ...created.map(normalize),
+          ...participated.map(normalize),
+          ...won.map(normalize),
+        ];
+
+        setAllAuctions(auctionsData);
+        setFilteredAuctions(auctionsData.slice(0, 3));
+
+        const totalWon = won.length;
+        const totalSpent = won.reduce((sum, a) => sum + Number(a.current_price || a.starting_price || 0), 0);
+        const activeAuctions = auctionsData.filter((a) => a.status === "active").length;
+        const monthlySpending = totalSpent; // simplify for now
+
+        setFinancialData({
+          totalBids: participated.length,
+          totalWon,
+          totalSpent,
+          activeAuctions,
+          monthlySpending,
+          profitLoss: 0,
+        });
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
   }, []);
 
   const formatCurrency = (amount) => {
@@ -723,18 +638,42 @@ const Dashboard = () => {
                         ایجاد جدید
                       </h4>
                       <div className="space-y-2">
-                        <Link
-                          to="/create-auction"
-                          className="block w-full text-center px-4 py-2 border border-[#E3D095] text-sm font-medium rounded-md text-[#E3D095] bg-white hover:bg-[#E3D095]/5 transition-colors"
-                        >
-                          ایجاد مزایده
-                        </Link>
-                        <Link
-                          to="/create-tender"
-                          className="block w-full text-center px-4 py-2 border border-[#E3D095] text-sm font-medium rounded-md text-[#E3D095] bg-white hover:bg-[#E3D095]/5 transition-colors"
-                        >
-                          ایجاد مناقصه
-                        </Link>
+                        <div className="relative group">
+                          <Link
+                            to="/create-auction"
+                            aria-disabled={!user?.subscription_active}
+                            className={`block w-full text-center px-4 py-2 border border-[#E3D095] text-sm font-medium rounded-md text-[#E3D095] bg-white transition-colors ${
+                              user?.subscription_active
+                                ? "hover:bg-[#E3D095]/5"
+                                : "opacity-50 cursor-not-allowed pointer-events-none"
+                            }`}
+                          >
+                            ایجاد مزایده
+                          </Link>
+                          {!user?.subscription_active && (
+                            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-10 bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap hidden group-hover:block">
+                              برای ایجاد مناقصه/مزایده اشتراک تهیه بفرمایید
+                            </div>
+                          )}
+                        </div>
+                        <div className="relative group">
+                          <Link
+                            to="/create-tender"
+                            aria-disabled={!user?.subscription_active}
+                            className={`block w-full text-center px-4 py-2 border border-[#E3D095] text-sm font-medium rounded-md text-[#E3D095] bg-white transition-colors ${
+                              user?.subscription_active
+                                ? "hover:bg-[#E3D095]/5"
+                                : "opacity-50 cursor-not-allowed pointer-events-none"
+                            }`}
+                          >
+                            ایجاد مناقصه
+                          </Link>
+                          {!user?.subscription_active && (
+                            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-10 bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap hidden group-hover:block">
+                              برای ایجاد مناقصه/مزایده اشتراک تهیه بفرمایید
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
