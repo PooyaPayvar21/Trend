@@ -7,6 +7,7 @@ from .views import (
     UserNotificationListView, mark_notification_read,
     user_auctions, SubscriptionPurchaseView,
     CreateAuctionView, CreateTenderView,
+    ChangePasswordView,
     # Admin Views
     AdminDashboardView, AdminUserManagementView, AdminUserDetailView,
     AdminAuctionManagementView, AdminAuctionDetailView,
@@ -21,6 +22,7 @@ urlpatterns = [
     path('auth/register/', UserRegistrationView.as_view(), name='user-register'),
     path('auth/login/', UserLoginView.as_view(), name='user-login'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/change-password/', ChangePasswordView.as_view(), name='change-password'),
     
     # User Profile URLs
     path('profile/', UserProfileView.as_view(), name='user-profile'),

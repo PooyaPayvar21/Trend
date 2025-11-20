@@ -4,46 +4,24 @@ import PersianDateTime from "../components/PersianDateTime";
 import { useTheme } from "../context/ThemeContext";
 import ConsultationSection from "../components/ConsultationSection";
 
-const trends = [
-  {
-    id: 1,
-    title: "مناقصه خودروهای لوکس",
-    description: "بررسی مناقصه  قیمت خودروهای لوکس در بازار",
-    price: "۲,۵۰۰,۰۰۰,۰۰۰",
-    deadline: "2024-03-22T15:00:00",
-    status: "فعال",
-    category: "خودرو",
-    details:
-      "تحلیل مناقصه  قیمت خودروهای لوکس در ۶ ماه گذشته و پیش‌بینی مناقصه  آینده",
-    contact: "۰۹۱۲۳۴۵۶۷۸۹",
-    documents: ["گزارش تحلیلی", "نمودار مناقصه ", "پیش‌بینی قیمت"],
-  },
-  {
-    id: 2,
-    title: "مناقصه املاک شمال",
-    description: "بررسی مناقصه  قیمت املاک در شمال کشور",
-    price: "۱,۸۰۰,۰۰۰,۰۰۰",
-    deadline: "2024-03-25T10:30:00",
-    status: "فعال",
-    category: "املاک",
-    details:
-      "تحلیل مناقصه  قیمت املاک در مناطق شمالی کشور و پیش‌بینی مناقصه  آینده",
-    contact: "۰۹۱۲۳۴۵۶۷۸۹",
-    documents: ["گزارش تحلیلی", "نقشه مناطق", "پیش‌بینی قیمت"],
-  },
-  {
-    id: 3,
-    title: "مناقصه ارز دیجیتال",
-    description: "بررسی مناقصه  قیمت ارزهای دیجیتال",
-    price: "۹۵۰,۰۰۰,۰۰۰",
-    deadline: "2024-03-12T12:00:00",
-    status: "غیرفعال",
-    category: "ارز دیجیتال",
-    details: "تحلیل مناقصه  قیمت ارزهای دیجیتال و پیش‌بینی مناقصه  آینده",
-    contact: "۰۹۱۲۳۴۵۶۷۸۹",
-    documents: ["گزارش تحلیلی", "نمودار مناقصه ", "پیش‌بینی قیمت"],
-  },
-];
+const statusFa = (s) => {
+  switch (s) {
+    case "active":
+      return "فعال";
+    case "inactive":
+      return "غیرفعال";
+    case "completed":
+      return "تکمیل شده";
+    case "cancelled":
+      return "لغو شده";
+    case "pending_review":
+      return "در حال بررسی";
+    case "rejected":
+      return "رد شده";
+    default:
+      return s || "";
+  }
+};
 
 const slides = [
   {
@@ -71,9 +49,8 @@ const Trend = () => {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
   const { id } = useParams();
-  const [selectedTrend, setSelectedTrend] = useState(
-    id ? trends.find((trend) => trend.id === Number(id)) : null
-  );
+  const [trends, setTrends] = useState([]);
+  const [selectedTrend, setSelectedTrend] = useState(null);
   const [filter, setFilter] = useState(null);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -117,6 +94,37 @@ const Trend = () => {
     }, 2000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const loadTenders = async () => {
+      try {
+        const { default: api } = await import("../api/index");
+        const res = await api.get("/auctions/");
+        const data = Array.isArray(res.data) ? res.data : res.data?.results || [];
+        const tenders = data.filter((a) => String(a.condition || "").toLowerCase() === "tender");
+        const mapped = tenders.map((a) => ({
+          id: a.id,
+          title: a.title,
+          description: a.description,
+          price: new Intl.NumberFormat("fa-IR").format(Number(a.starting_price || a.current_price || 0)),
+          deadline: a.end_date,
+          status: statusFa(a.status),
+          category: a.category || "",
+          details: a.description,
+          contact: "-",
+          documents: [],
+        }));
+        setTrends(mapped);
+        if (id) {
+          const found = mapped.find((t) => t.id === Number(id));
+          setSelectedTrend(found || null);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    loadTenders();
+  }, [id]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(searchQuery), 250);
@@ -396,13 +404,22 @@ const Trend = () => {
     return (isFinite(max) ? max : 0).toLocaleString("fa-IR");
   };
 
+  const endingSoonCount = () => {
+    const now = Date.now();
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    return trends.filter((t) => {
+      const deadline = new Date(t.deadline).getTime();
+      return t.status === "فعال" && deadline >= now && deadline - now <= sevenDays;
+    }).length;
+  };
+
   const commercialStats = [
     {
       key: "all",
       title: "کل مناقصه‌ها",
       value: trends.length,
       icon: "📊",
-      color: "from-indigo-400 to-indigo-600",
+      color: "from-green-500/20 to-green-600/20",
       onClick: () => setFilter(null),
       isActive: () => filter === null,
       hint: "نمایش همه",
@@ -412,7 +429,7 @@ const Trend = () => {
       title: "مناقصه‌های فعال",
       value: trends.filter((t) => t.status === "فعال").length,
       icon: "✅",
-      color: "from-indigo-400 to-indigo-600",
+      color: "from-green-500/20 to-green-600/20",
       onClick: () => setFilter("فعال"),
       isActive: () => filter === "فعال",
       hint: "فقط فعال‌ها",
@@ -422,7 +439,7 @@ const Trend = () => {
       title: "مناقصه‌های غیرفعال",
       value: trends.filter((t) => t.status === "غیرفعال").length,
       icon: "⏸",
-      color: "from-indigo-400 to-indigo-600",
+      color: "from-green-500/20 to-green-600/20",
       onClick: () => setFilter("غیرفعال"),
       isActive: () => filter === "غیرفعال",
       hint: "فقط غیرفعال‌ها",
@@ -432,7 +449,7 @@ const Trend = () => {
       title: "ارزش کل مناقصه‌ها",
       value: `${calculateTotalValue()} تومان`,
       icon: "💰",
-      color: "from-indigo-400 to-indigo-600",
+      color: "from-yellow-500/20 to-yellow-600/20",
       onClick: () => setSortKey("price_desc"),
       isActive: () => sortKey === "price_desc",
       hint: "مرتب‌سازی بر اساس بیشترین قیمت",
@@ -442,17 +459,27 @@ const Trend = () => {
       title: "ارزش مناقصه‌های فعال",
       value: `${calculateActiveTotalValue()} تومان`,
       icon: "📈",
-      color: "from-indigo-400 to-indigo-600",
+      color: "from-blue-500/20 to-blue-600/20",
       onClick: () => setFilter("فعال"),
       isActive: () => filter === "فعال",
       hint: "نمایش فقط فعال‌ها",
+    },
+    {
+      key: "ending_soon",
+      title: "رو به پایان (۷ روز)",
+      value: endingSoonCount(),
+      icon: "⏰",
+      color: "from-red-500/20 to-red-600/20",
+      onClick: () => setSortKey("deadline_asc"),
+      isActive: () => sortKey === "deadline_asc",
+      hint: "نزدیک‌ترین مهلت‌ها",
     },
     {
       key: "avg_price",
       title: "میانگین قیمت",
       value: `${calculateAveragePrice()} تومان`,
       icon: "📐",
-      color: "from-indigo-400 to-indigo-600",
+      color: "from-purple-500/20 to-purple-600/20",
       onClick: () => setSortKey("price_desc"),
       isActive: () => sortKey === "price_desc",
       hint: "مرتب‌سازی بر اساس قیمت",
@@ -462,7 +489,7 @@ const Trend = () => {
       title: "بیشترین قیمت",
       value: `${highestPrice()} تومان`,
       icon: "🏆",
-      color: "from-indigo-400 to-indigo-600",
+      color: "from-orange-500/20 to-orange-600/20",
       onClick: () => setSortKey("price_desc"),
       isActive: () => sortKey === "price_desc",
       hint: "نمایش گران‌ترین‌ها",
@@ -472,9 +499,7 @@ const Trend = () => {
   return (
     <div
       className={`min-h-screen flex flex-col transition-all duration-300 ${
-        isDarkMode
-          ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
-          : "bg-gradient-to-br from-gray-400 via-white to-slate-800"
+        isDarkMode ? "bg-[#0E2148]" : "bg-[#604bfb]"
       }`}
     >
       <div
@@ -556,7 +581,7 @@ const Trend = () => {
                 </div>
               </div>
             ))}
-            <div className="col-span-1 sm:col-span-2 lg:col-span-4 bg-gradient-to-b from-indigo-400 to-indigo-600 p-4 rounded-xl border border-[#00A592]/20 transition-transform duration-300 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-offset-2">
+            <div className="col-span-1 sm:col-span-2 lg:col-span-4">
               <label
                 htmlFor="trend-search"
                 className="block text-white/80 text-sm mb-2"
@@ -650,13 +675,7 @@ const Trend = () => {
               </div>
             </div>
           </div>
-          <div
-            className={`backdrop-blur-sm rounded-2xl p-4 sm:p-8 ${
-              isDarkMode
-                ? "bg-[#0E2148]"
-                : "bg-gradient-to-b from-indigo-400 to-indigo-600 border border-[#00A592]/20 shadow-soft"
-            }`}
-          >
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 sm:p-8 border border-[#00A592]/20 shadow-soft">
             <div className="mb-8 sm:mb-12">
               <div className="text-center mb-6 sm:mb-8">
                 <div className="flex items-center justify-center gap-4">
@@ -719,7 +738,7 @@ const Trend = () => {
                           />
                         </span>
                       </div>
-                      <div className="flex justify_between items-center">
+                      <div className="flex justify-between items-center">
                         <span
                           className={`bg-${
                             trend.status === "فعال" ? "green" : "red"

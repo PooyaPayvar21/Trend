@@ -60,6 +60,34 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 
         return Response(serializer.data)
 
+class ChangePasswordView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+        confirm_password = request.data.get('confirm_password')
+
+        if not current_password or not new_password or not confirm_password:
+            return Response({'detail': 'تمام فیلدها الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if new_password != confirm_password:
+            return Response({'detail': 'رمزهای عبور مطابقت ندارند'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = request.user
+        if not user.check_password(current_password):
+            return Response({'detail': 'رمز عبور فعلی اشتباه است'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'message': 'رمز عبور با موفقیت تغییر کرد',
+            'access': str(refresh.access_token),
+            'refresh': str(refresh)
+        }, status=status.HTTP_200_OK)
+
 class AuctionListCreateView(generics.ListCreateAPIView):
     queryset = Auction.objects.all()  # type: ignore
     serializer_class = AuctionSerializer

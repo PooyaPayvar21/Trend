@@ -44,12 +44,12 @@ const Register = () => {
         email: formData.email,
         password: formData.password,
         confirm_password: formData.confirmPassword,
-        first_name: formData.fullName.split(' ')[0] || '',
-        last_name: formData.fullName.split(' ').slice(1).join(' ') || '',
+        first_name: formData.fullName.split(" ")[0] || "",
+        last_name: formData.fullName.split(" ").slice(1).join(" ") || "",
         phone_number: formData.phone_number,
         address: formData.address,
-        company: '',
-        national_id: ''
+        company: "",
+        national_id: "",
       };
 
       await register(userData);

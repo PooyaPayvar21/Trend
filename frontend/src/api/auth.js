@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -126,17 +126,39 @@ const authAPI = {
         }
     },
 
-    updateProfile: async (profileData) => {
-        try {
-            const response = await api.patch('/profile/', profileData);
-            return response.data;
-        } catch (error) {
-            const errorMessage = error.response?.data?.detail || 
-                               error.response?.data?.error || 
-                               'خطا در به‌روزرسانی پروفایل. لطفا دوباره تلاش کنید.';
-            throw { detail: errorMessage };
-        }
-    },
+  updateProfile: async (profileData) => {
+    try {
+      const response = await api.patch('/profile/', profileData);
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.detail || 
+                         error.response?.data?.error || 
+                          'خطا در به‌روزرسانی پروفایل. لطفا دوباره تلاش کنید.';
+      throw { detail: errorMessage };
+    }
+  },
+
+  changePassword: async (current_password, new_password, confirm_password) => {
+    try {
+      const response = await api.post('/auth/change-password/', {
+        current_password,
+        new_password,
+        confirm_password,
+      });
+      if (response.data.access) {
+        localStorage.setItem('accessToken', response.data.access);
+      }
+      if (response.data.refresh) {
+        localStorage.setItem('refreshToken', response.data.refresh);
+      }
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.detail || 
+                         error.response?.data?.error || 
+                         'خطا در تغییر رمز عبور';
+      throw { detail: errorMessage };
+    }
+  },
 
     purchaseSubscription: async (subscriptionType) => {
         try {
