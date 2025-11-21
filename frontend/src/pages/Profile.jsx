@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import authAPI from "../api/auth";
 import toast from "react-hot-toast";
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
+  const { isDarkMode } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [passwordData, setPasswordData] = useState({
     current_password: "",
@@ -75,7 +77,11 @@ const Profile = () => {
   };
 
   const handleChangePassword = async () => {
-    if (!passwordData.current_password || !passwordData.new_password || !passwordData.confirm_password) {
+    if (
+      !passwordData.current_password ||
+      !passwordData.new_password ||
+      !passwordData.confirm_password
+    ) {
       toast.error("تمام فیلدهای رمز عبور را پر کنید");
       return;
     }
@@ -91,7 +97,11 @@ const Profile = () => {
         passwordData.confirm_password
       );
       toast.success(res.message || "رمز عبور با موفقیت تغییر کرد");
-      setPasswordData({ current_password: "", new_password: "", confirm_password: "" });
+      setPasswordData({
+        current_password: "",
+        new_password: "",
+        confirm_password: "",
+      });
     } catch (error) {
       toast.error(error.detail || "خطا در تغییر رمز عبور");
     } finally {
@@ -111,7 +121,10 @@ const Profile = () => {
                 </h3>
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <div>
-                    <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="username"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       نام کاربری
                     </label>
                     <input
@@ -125,7 +138,10 @@ const Profile = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       ایمیل
                     </label>
                     <input
@@ -139,7 +155,10 @@ const Profile = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="phone_number"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       شماره تماس
                     </label>
                     <input
@@ -153,7 +172,10 @@ const Profile = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="address"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       آدرس
                     </label>
                     <input
@@ -167,7 +189,10 @@ const Profile = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="company" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="company"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       نام شرکت
                     </label>
                     <input
@@ -181,7 +206,10 @@ const Profile = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="national_id" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="national_id"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       کد ملی
                     </label>
                     <input
@@ -199,7 +227,9 @@ const Profile = () => {
                   <button
                     type="button"
                     onClick={handleSave}
-                    className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                    className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 ${
+                      isLoading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                     disabled={isLoading}
                   >
                     {isLoading ? "در حال ذخیره..." : "ذخیره تغییرات"}
@@ -215,7 +245,10 @@ const Profile = () => {
                 </h3>
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <div>
-                    <label htmlFor="current-password" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="current-password"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       رمز عبور فعلی
                     </label>
                     <input
@@ -228,7 +261,10 @@ const Profile = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="new-password" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="new-password"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       رمز عبور جدید
                     </label>
                     <input
@@ -241,7 +277,10 @@ const Profile = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="confirm-password"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       تکرار رمز عبور جدید
                     </label>
                     <input
@@ -258,7 +297,11 @@ const Profile = () => {
                   <button
                     type="button"
                     onClick={handleChangePassword}
-                    className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                    className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                      isDarkMode
+                        ? "text-black bg-[#E3D095] hover:bg-[#E3D095]/80 focus:ring-[#E3D095]"
+                        : "text-white bg-gray-600 hover:bg-gray-700 focus:ring-gray-500"
+                    } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                     disabled={isLoading}
                   >
                     {isLoading ? "در حال تغییر..." : "تغییر رمز عبور"}

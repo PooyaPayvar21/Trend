@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   PieChart,
   Pie,
@@ -14,25 +14,25 @@ import {
   CartesianGrid,
 } from "recharts";
 
-const todayData = [
-  { name: "مناقصه", value: 2191 },
-  { name: "مزایده", value: 20434 },
-  { name: "استعلام", value: 15218 },
+const INITIAL_TODAY = [
+  { name: "مناقصه", value: 0 },
+  { name: "مزایده", value: 0 },
+  { name: "استعلام", value: 0 },
 ];
 
-const yesterdayData = [
-  { name: "مناقصات دیروز", value: 19132 },
-  { name: "استعلام های دیروز", value: 16555 },
+const INITIAL_YESTERDAY = [
+  { name: "مناقصات دیروز", value: 0 },
+  { name: "استعلام های دیروز", value: 0 },
 ];
 
-const areaData = [
-  { name: "Jan", مناقصه: 4000, مزایده: 2400, استعلام: 2400 },
-  { name: "Feb", مناقصه: 3000, مزایده: 1398, استعلام: 2210 },
-  { name: "Mar", مناقصه: 2000, مزایده: 9800, استعلام: 2290 },
-  { name: "Apr", مناقصه: 2780, مزایده: 3908, استعلام: 2000 },
-  { name: "May", مناقصه: 1890, مزایده: 4800, استعلام: 2181 },
-  { name: "Jun", مناقصه: 2390, مزایده: 3800, استعلام: 2500 },
-];
+const monthLabel = (date) =>
+  date.toLocaleDateString("fa-IR", { month: "short" });
+
+const INITIAL_SIX_MONTH = Array.from({ length: 6 }, (_, i) => {
+  const d = new Date();
+  d.setMonth(d.getMonth() - (5 - i));
+  return { name: monthLabel(d), مناقصه: 0, مزایده: 0, استعلام: 0 };
+});
 
 const COLORS = ["#4fd1c5", "#23264d", "#f6b23c", "#8d8cf8"];
 
@@ -141,6 +141,127 @@ const AuctionTrendCharts = () => {
     مزایده: true,
     استعلام: true,
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [auctions, setAuctions] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { default: api } = await import("../api/index");
+        const res = await api.get("/auctions/", { params: { page_size: 1000 } });
+        const data = Array.isArray(res.data)
+          ? res.data
+          : res.data?.results || [];
+        if (!cancelled) setAuctions(data);
+      } catch (e) {
+        if (!cancelled) setError("خطا در دریافت داده‌های نمودار");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const classifyType = (a) => {
+    const cond = String(a.condition || "").toLowerCase();
+    if (cond === "tender") return "مناقصه";
+    return "مزایده";
+  };
+
+  const withinRange = (dt, start, end) => {
+    const t = new Date(dt).getTime();
+    return t >= start && t <= end;
+  };
+
+  const startOfDay = (d) => {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    return x.getTime();
+  };
+
+  const endOfDay = (d) => {
+    const x = new Date(d);
+    x.setHours(23, 59, 59, 999);
+    return x.getTime();
+  };
+
+  const todayRange = useMemo(() => {
+    const now = new Date();
+    return { s: startOfDay(now), e: endOfDay(now) };
+  }, []);
+
+  const yesterdayRange = useMemo(() => {
+    const y = new Date();
+    y.setDate(y.getDate() - 1);
+    return { s: startOfDay(y), e: endOfDay(y) };
+  }, []);
+
+  const todayData = useMemo(() => {
+    if (!auctions.length) return INITIAL_TODAY;
+    const counts = { مناقصه: 0, مزایده: 0, استعلام: 0 };
+    auctions.forEach((a) => {
+      const created = a.created_at || a.start_date;
+      if (!created) return;
+      if (withinRange(created, todayRange.s, todayRange.e)) {
+        const t = classifyType(a);
+        counts[t] += 1;
+      }
+    });
+    return [
+      { name: "مناقصه", value: counts.مناقصه },
+      { name: "مزایده", value: counts.مزایده },
+      { name: "استعلام", value: counts.استعلام },
+    ];
+  }, [auctions, todayRange]);
+
+  const yesterdayData = useMemo(() => {
+    if (!auctions.length) return INITIAL_YESTERDAY;
+    let tenders = 0;
+    let inquiries = 0;
+    auctions.forEach((a) => {
+      const created = a.created_at || a.start_date;
+      if (!created) return;
+      if (withinRange(created, yesterdayRange.s, yesterdayRange.e)) {
+        const t = classifyType(a);
+        if (t === "مناقصه") tenders += 1;
+      }
+    });
+    return [
+      { name: "مناقصات دیروز", value: tenders },
+      { name: "استعلام های دیروز", value: inquiries },
+    ];
+  }, [auctions, yesterdayRange]);
+
+  const areaData = useMemo(() => {
+    if (!auctions.length) return INITIAL_SIX_MONTH;
+    const months = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date();
+      d.setMonth(d.getMonth() - (5 - i));
+      const start = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
+      return { label: monthLabel(d), start, end };
+    });
+    const rows = months.map((m) => ({ name: m.label, مناقصه: 0, مزایده: 0, استعلام: 0 }));
+    auctions.forEach((a) => {
+      const created = a.created_at || a.start_date;
+      if (!created) return;
+      const ts = new Date(created).getTime();
+      const t = classifyType(a);
+      months.forEach((m, idx) => {
+        if (ts >= m.start && ts <= m.end) {
+          rows[idx][t] += 1;
+        }
+      });
+    });
+    return rows;
+  }, [auctions]);
 
   // Helper for toggling selection
   const handleSelect = (current, setCurrent) => (idx) => {

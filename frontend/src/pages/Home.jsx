@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FaGavel,
@@ -19,6 +19,51 @@ import ConsultationSection from "../components/ConsultationSection";
 const Home = () => {
   const { isDarkMode } = useTheme();
 
+  const [stats, setStats] = useState([
+    { number: "۰", label: "مزایده فعال", icon: FaChartLine },
+    { number: "۰", label: "مناقصه فعال", icon: FaHandshake },
+    { number: "۹۸%", label: "رضایت مشتری", icon: FaShieldAlt },
+  ]);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const { default: api } = await import("../api/index");
+        const res = await api.get("/auctions/");
+        const data = Array.isArray(res.data)
+          ? res.data
+          : res.data?.results || [];
+        const activeAuctions = data.filter(
+          (a) =>
+            String(a.status).toLowerCase() === "active" &&
+            String(a.condition || "").toLowerCase() !== "tender"
+        ).length;
+        const activeTenders = data.filter(
+          (a) =>
+            String(a.status).toLowerCase() === "active" &&
+            String(a.condition || "").toLowerCase() === "tender"
+        ).length;
+        const fmt = (n) => new Intl.NumberFormat("fa-IR").format(n);
+        setStats([
+          {
+            number: fmt(activeAuctions),
+            label: "مزایده فعال",
+            icon: FaChartLine,
+          },
+          {
+            number: fmt(activeTenders),
+            label: "مناقصه فعال",
+            icon: FaHandshake,
+          },
+          { number: "۹۸%", label: "رضایت مشتری", icon: FaShieldAlt },
+        ]);
+      } catch (e) {
+        // ignore
+      }
+    };
+    loadStats();
+  }, []);
+
   const quickActions = [
     {
       title: "ایجاد مزایده",
@@ -36,12 +81,6 @@ const Home = () => {
       gradient: "from-blue-500 to-cyan-500",
       hoverGradient: "from-blue-600 to-cyan-600",
     },
-  ];
-
-  const stats = [
-    { number: "۱۲۵۰+", label: "مزایده فعال", icon: FaChartLine },
-    { number: "۸۹۰+", label: "مناقصه فعال", icon: FaHandshake },
-    { number: "۹۸%", label: "رضایت مشتری", icon: FaShieldAlt },
   ];
 
   return (

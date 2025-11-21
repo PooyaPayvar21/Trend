@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import PersianDateTime from "../components/PersianDateTime";
 import { useTheme } from "../context/ThemeContext";
 import ConsultationSection from "../components/ConsultationSection";
@@ -52,6 +52,7 @@ const Trend = () => {
   const [trends, setTrends] = useState([]);
   const [selectedTrend, setSelectedTrend] = useState(null);
   const [filter, setFilter] = useState(null);
+  const [categoryFilter, setCategoryFilter] = useState(null);
   const [formData, setFormData] = useState({
     fullName: "",
     mobile: "",
@@ -126,6 +127,12 @@ const Trend = () => {
     loadTenders();
   }, [id]);
 
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const cat = searchParams.get("category");
+    if (cat) setCategoryFilter(cat);
+  }, [searchParams]);
+
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(searchQuery), 250);
     return () => clearTimeout(t);
@@ -159,6 +166,13 @@ const Trend = () => {
         [t.title, t.description, t.category]
           .filter(Boolean)
           .some((v) => String(v).toLowerCase().includes(q))
+    )
+    .filter(
+      (t) =>
+        !categoryFilter ||
+        String(t.category || "")
+          .toLowerCase()
+          .includes(String(categoryFilter).toLowerCase())
     );
 
   const toEnglishDigits = (str) =>
@@ -688,6 +702,14 @@ const Trend = () => {
                       className="text-white/80 hover:text-white text-sm border border-white/20 rounded-lg px-3 py-1 hover:border-white/40 transition-colors duration-300 cursor-pointer"
                     >
                       حذف فیلتر
+                    </button>
+                  )}
+                  {categoryFilter && (
+                    <button
+                      onClick={() => setCategoryFilter(null)}
+                      className="text-white/80 hover:text-white text-sm border border-white/20 rounded-lg px-3 py-1 hover:border-white/40 transition-colors duration-300 cursor-pointer"
+                    >
+                      مناقصه‌های {categoryFilter} • حذف فیلتر دسته
                     </button>
                   )}
                 </div>

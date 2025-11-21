@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import PersianDateTime from "../components/PersianDateTime";
 import { useTheme } from "../context/ThemeContext";
 import ConsultationSection from "../components/ConsultationSection";
@@ -33,6 +33,8 @@ const Auctions = () => {
   const [auctions, setAuctions] = useState([]);
   const [selectedAuction, setSelectedAuction] = useState(null);
   const [filter, setFilter] = useState(null);
+  const [categoryFilter, setCategoryFilter] = useState(null);
+  const [typeFilter, setTypeFilter] = useState("auction");
   const [formData, setFormData] = useState({
     fullName: "",
     mobile: "",
@@ -63,6 +65,14 @@ const Auctions = () => {
     };
     loadAuctions();
   }, [id]);
+
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const cat = searchParams.get("category");
+    const kind = searchParams.get("type");
+    if (cat) setCategoryFilter(cat);
+    if (kind) setTypeFilter(kind);
+  }, [searchParams]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(searchQuery), 250);
@@ -121,6 +131,14 @@ const Auctions = () => {
   const q = debouncedQuery.trim().toLowerCase();
   const visibleAuctions = auctions
     .filter((a) => !filter || a.status === filter)
+    .filter((a) => {
+      const c = String(a.condition || "").toLowerCase();
+      const isTender = c === "tender";
+      return typeFilter === "tender" ? isTender : !isTender;
+    })
+    .filter((a) =>
+      !categoryFilter || String(a.category || "").toLowerCase().includes(String(categoryFilter).toLowerCase())
+    )
     .filter((a) => {
       const hay = [a.title, a.description, a.location, a.category, a.condition]
         .filter(Boolean)
@@ -640,7 +658,11 @@ const Auctions = () => {
               <div className="text-center mb-6 sm:mb-8">
                 <div className="flex items-center justify-center gap-4">
                   <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                    {filter ? `مزایده های ${filter}` : "همه مزایده ها"}
+                    {categoryFilter
+                      ? `مزایده‌های ${categoryFilter}`
+                      : filter
+                      ? `مزایده های ${filter}`
+                      : "همه مزایده ها"}
                   </h2>
                   {filter && (
                     <button
@@ -648,6 +670,14 @@ const Auctions = () => {
                       className="text-white/80 hover:text-white text-sm border border-white/20 rounded-lg px-3 py-1 hover:border-white/40 transition-colors duration-300 cursor-pointer"
                     >
                       حذف فیلتر
+                    </button>
+                  )}
+                  {categoryFilter && (
+                    <button
+                      onClick={() => setCategoryFilter(null)}
+                      className="text-white/80 hover:text-white text-sm border border-white/20 rounded-lg px-3 py-1 hover:border-white/40 transition-colors duration-300 cursor-pointer"
+                    >
+                      حذف فیلتر دسته
                     </button>
                   )}
                 </div>
